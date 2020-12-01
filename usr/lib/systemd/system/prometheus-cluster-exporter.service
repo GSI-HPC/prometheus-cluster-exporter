@@ -1,0 +1,11 @@
+[Unit]
+Description=Prometheus Cluster Exporter
+
+[Service]
+ExecStart=/usr/bin/cluster_exporter
+User=prometheus
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
