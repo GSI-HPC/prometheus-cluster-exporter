@@ -2,6 +2,22 @@
 
 A Prometheus exporter for Lustre IO throughput metrics associated to SLURM accounts and process names on a cluster.
 
+## Requirements
+
+### Lustre Exporter
+
+A Lustre exporter that exposes the two metrics to Prometheus with a label jobid is required:  
+
+* lustre_job_read_bytes_total
+* lustre_job_write_bytes_total
+
+The Lustre exporter from HP provides such metrics:  
+https://github.com/HewlettPackard/lustre_exporter
+
+### Squeue Command
+
+The squeue command from SLURM must be accessable locally to the exporter to retrieve the running jobs.
+
 ## Metrics
 
 Cluster exporter metrics are prefixed with "cluster_".
@@ -14,13 +30,6 @@ These metrics are always exported.
 | -------------------------------- | ------------- | ----------------------------------------------------------------- |
 | exporter_scrape_ok               | -             | Indicates if the scrape of the exporter was successful or not.    |
 | exporter_stage_execution_seconds | name          | Execution duration in seconds spend in a specific exporter stage. |
-
-TODO: List/Describe exporter stages.  
-
-    HELP cluster_exporter_stage_execution_seconds Execution duration in seconds spend in a specific exporter stage.  
-    cluster_exporter_stage_execution_seconds{name="build_read_throughput_metrics"} 3.524443994  
-    cluster_exporter_stage_execution_seconds{name="build_write_throughput_metrics"} 3.603413776  
-    cluster_exporter_stage_execution_seconds{name="retrieve_running_jobs"} 0.161250696  
 
 ### Throughput
 
