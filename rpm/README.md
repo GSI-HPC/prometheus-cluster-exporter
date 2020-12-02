@@ -1,21 +1,21 @@
-# How-To Create RPM Package
+# How-To Create the RPM Package
+
+(given the cluster exporter version 1.0)
 
 Create required rpmbuild directory structure in the users home directory:  
 
 `mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}`
 
-Create a directory e.g. RPM_SOURCE with following structure:  
+Create the following file structure within the `~/rpmbuild/SOURCES` directory to build the rpm package:  
 
-* prometheus-cluster-exporter-1.0/usr/bin/cluster_exporter
-* prometheus-cluster-exporter-1.0/usr/lib/systemd/system/prometheus-cluster-exporter.service
+* `prometheus-cluster-exporter-1.0/usr/bin/cluster_exporter`
+* `prometheus-cluster-exporter-1.0/usr/lib/systemd/system/prometheus-cluster-exporter.service`
 
-Create tar ball:  
+Create the tar ball:  
 
 `tar -czvf prometheus-cluster-exporter-1.0.tar.gz prometheus-cluster-exporter-1.0`
 
-Copy tar ball to:  
-
-`~/rpmbuild/SOURCES/`
+    Use relative paths here, otherwise rpmbuild will not find the extracted files!
 
 Create RPM package:  
 
