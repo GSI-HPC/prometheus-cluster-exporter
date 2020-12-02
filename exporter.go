@@ -63,7 +63,7 @@ func newExporter(requestTimeout int, urlLustreJobReadBytes string, urlLustreJobW
 	scrapeOKMetric := prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: namespaceInternals,
 		Name:      "scrape_ok",
-		Help:      "Indicates if the scrape of the exporter was successful or not..",
+		Help:      "Indicates if the scrape of the exporter was successful or not.",
 	})
 
 	stageExecutionMetric := newGaugeVecMetric(
@@ -75,25 +75,25 @@ func newExporter(requestTimeout int, urlLustreJobReadBytes string, urlLustreJobW
 	jobReadThroughputMetric := newGaugeVecMetric(
 		namespace,
 		"job_read_throughput_bytes",
-		"Lustre job read throughput on the cluster in bytes associated with account information.",
+		"Total IO read throughput of all jobs on the cluster per account in bytes per second.",
 		[]string{"account", "user"})
 
 	jobWriteThroughputMetric := newGaugeVecMetric(
 		namespace,
 		"job_write_throughput_bytes",
-		"Lustre job write throughput on the cluster in bytes associated with account information.",
+		"Total IO write throughput of all jobs on the cluster per account in bytes per second.",
 		[]string{"account", "user"})
 
 	procReadThroughputMetric := newGaugeVecMetric(
 		namespace,
 		"proc_read_throughput_bytes",
-		"Lustre process name read throughput on the cluster in bytes associated with the username.",
+		"Total IO read throughput of process names on the cluster per uid in bytes per second.",
 		[]string{"proc_name", "uid"})
 
 	procWriteThroughputMetric := newGaugeVecMetric(
 		namespace,
 		"proc_write_throughput_bytes",
-		"Lustre process name write throughput on the cluster in bytes associated with the username.",
+		"Total IO write throughput of process names on the cluster per uid in bytes per second.",
 		[]string{"proc_name", "uid"})
 
 	return &exporter{
