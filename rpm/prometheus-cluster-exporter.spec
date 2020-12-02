@@ -36,7 +36,6 @@ rm -rf %{buildroot}
 mkdir -vp  %{buildroot}
 mkdir -vp %{buildroot}%{_unitdir}/
 mkdir -vp %{buildroot}/var/lib/prometheus
-####cp usr/lib/systemd/system/%{name}.service %{buildroot}%{_unitdir}/
 
 # in builddir
 cp -a * %{buildroot}
