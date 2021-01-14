@@ -19,6 +19,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/buger/jsonparser"
@@ -27,6 +28,8 @@ import (
 )
 
 type exporter struct {
+	scrapeActive              bool
+	scrapeMutex               sync.Mutex
 	requestTimeout            int
 	urlLustreJobReadBytes     string
 	urlLustreJobWriteBytes    string
@@ -113,47 +116,67 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 
 	scrapeOK := true
 
-	var start time.Time
-	var elapsed float64
+	e.scrapeMutex.Lock() // Do mutex unlock ASAP
 
-	e.stageExecutionMetric.Reset()
-	e.jobReadThroughputMetric.Reset()
-	e.jobWriteThroughputMetric.Reset()
-	e.procReadThroughputMetric.Reset()
-	e.procWriteThroughputMetric.Reset()
-
-	start = time.Now()
-	runningJobs, err := retrieveRunningJobs()
-	elapsed = time.Since(start).Seconds()
-	e.stageExecutionMetric.WithLabelValues("retrieve_running_jobs").Set(elapsed)
-
-	if err != nil {
+	if e.scrapeActive {
 		scrapeOK = false
-		log.Errorln(err)
-	}
+		log.Warning("Collect is still active... - Skipping now")
+		e.scrapeMutex.Unlock()
+	} else {
 
-	start = time.Now()
-	err = e.buildLustreThroughputMetrics(runningJobs, true)
-	elapsed = time.Since(start).Seconds()
-	e.stageExecutionMetric.WithLabelValues("build_read_throughput_metrics").Set(elapsed)
+		e.scrapeActive = true
+		e.scrapeMutex.Unlock()
 
-	if err != nil {
-		if scrapeOK {
+		var start time.Time
+		var elapsed float64
+
+		e.stageExecutionMetric.Reset()
+		e.jobReadThroughputMetric.Reset()
+		e.jobWriteThroughputMetric.Reset()
+		e.procReadThroughputMetric.Reset()
+		e.procWriteThroughputMetric.Reset()
+
+		start = time.Now()
+		runningJobs, err := retrieveRunningJobs()
+		elapsed = time.Since(start).Seconds()
+		e.stageExecutionMetric.WithLabelValues("retrieve_running_jobs").Set(elapsed)
+
+		if err != nil {
 			scrapeOK = false
+			log.Errorln(err)
 		}
-		log.Errorln(err)
-	}
 
-	start = time.Now()
-	err = e.buildLustreThroughputMetrics(runningJobs, false)
-	elapsed = time.Since(start).Seconds()
-	e.stageExecutionMetric.WithLabelValues("build_write_throughput_metrics").Set(elapsed)
+		start = time.Now()
+		err = e.buildLustreThroughputMetrics(runningJobs, true)
+		elapsed = time.Since(start).Seconds()
+		e.stageExecutionMetric.WithLabelValues("build_read_throughput_metrics").Set(elapsed)
 
-	if err != nil {
-		if scrapeOK {
-			scrapeOK = false
+		if err != nil {
+			if scrapeOK {
+				scrapeOK = false
+			}
+			log.Errorln(err)
 		}
-		log.Errorln(err)
+
+		start = time.Now()
+		err = e.buildLustreThroughputMetrics(runningJobs, false)
+		elapsed = time.Since(start).Seconds()
+		e.stageExecutionMetric.WithLabelValues("build_write_throughput_metrics").Set(elapsed)
+
+		if err != nil {
+			if scrapeOK {
+				scrapeOK = false
+			}
+			log.Errorln(err)
+		}
+
+		e.stageExecutionMetric.Collect(ch)
+		e.jobReadThroughputMetric.Collect(ch)
+		e.jobWriteThroughputMetric.Collect(ch)
+		e.procReadThroughputMetric.Collect(ch)
+		e.procWriteThroughputMetric.Collect(ch)
+
+		e.scrapeActive = false
 	}
 
 	if scrapeOK {
@@ -163,11 +186,6 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	e.scrapeOKMetric.Collect(ch)
-	e.stageExecutionMetric.Collect(ch)
-	e.jobReadThroughputMetric.Collect(ch)
-	e.jobWriteThroughputMetric.Collect(ch)
-	e.procReadThroughputMetric.Collect(ch)
-	e.procWriteThroughputMetric.Collect(ch)
 }
 
 func (e *exporter) Describe(ch chan<- *prometheus.Desc) {
