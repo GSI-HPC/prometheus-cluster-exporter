@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	version                       = "1.0"
+	version                       = "1.1"
 	namespace                     = "cluster"
 	namespaceInternals            = "cluster_exporter"
 	defaultPort                   = "9166" // Port already in use by Dovecot exporter (https://github.com/prometheus/prometheus/wiki/Default-port-allocations)
