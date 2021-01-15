@@ -42,21 +42,21 @@ These metrics are always exported.
 
 #### **Process Names**
 
-| Metric                      | Labels         | Description                                                                            |
-| --------------------------- | -------------- | -------------------------------------------------------------------------------------- |
-| proc_read_throughput_bytes  | proc_name, uid | Total IO read throughput of process names on the cluster per uid in bytes per second.  |
-| proc_write_throughput_bytes | proc_name, uid | Total IO write throughput of process names on the cluster per uid in bytes per second. |
+| Metric                      | Labels                           | Description                                                                                       |
+| --------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------- |
+| proc_read_throughput_bytes  | proc_name, user_name, group_name | Total IO read throughput of process names on the cluster per group and user in bytes per second.  |
+| proc_write_throughput_bytes | proc_name, user_name, group_name | Total IO write throughput of process names on the cluster per group and user in bytes per second. |
 
 ## Multiple Srape Prevention
 
 Since the forked processes do not have a timeout handling, they might block for a uncertain amount of time.  
-It is very unlikely that reexecuting the processes will solve the problem of beeing blocked.   
+It is very unlikely that reexecuting the processes will solve the problem of beeing blocked.  
 Therefore multiple scrapes at a time will be prevented by the exporter.  
 
 The following warning will be displayed on afterward scrape executions, were a scrape is still active:  
     *"Collect is still active... - Skipping now"*
 
-Besides that, the cluster_exporter_scrape_ok metric will be set to 0 for skipped scrape attempts.
+Besides that, the cluster_exporter_scrape_ok metric will be set to 0 for skipped scrape attempts.  
 
 ## Building the Exporter
 
