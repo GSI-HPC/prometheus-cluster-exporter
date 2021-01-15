@@ -78,26 +78,26 @@ func newExporter(requestTimeout int, urlLustreJobReadBytes string, urlLustreJobW
 	jobReadThroughputMetric := newGaugeVecMetric(
 		namespace,
 		"job_read_throughput_bytes",
-		"Total IO read throughput of all jobs on the cluster per account in bytes per second.",
+		"Total IO read throughput of all jobs on the cluster per account and user in bytes per second.",
 		[]string{"account", "user"})
 
 	jobWriteThroughputMetric := newGaugeVecMetric(
 		namespace,
 		"job_write_throughput_bytes",
-		"Total IO write throughput of all jobs on the cluster per account in bytes per second.",
+		"Total IO write throughput of all jobs on the cluster per account and user in bytes per second.",
 		[]string{"account", "user"})
 
 	procReadThroughputMetric := newGaugeVecMetric(
 		namespace,
 		"proc_read_throughput_bytes",
-		"Total IO read throughput of process names on the cluster per uid in bytes per second.",
-		[]string{"proc_name", "uid"})
+		"Total IO read throughput of process names on the cluster per group and user in bytes per second.",
+		[]string{"proc_name", "group_name", "user_name"})
 
 	procWriteThroughputMetric := newGaugeVecMetric(
 		namespace,
 		"proc_write_throughput_bytes",
-		"Total IO write throughput of process names on the cluster per uid in bytes per second.",
-		[]string{"proc_name", "uid"})
+		"Total IO write throughput of process names on the cluster per group and user in bytes per second.",
+		[]string{"proc_name", "group_name", "user_name"})
 
 	return &exporter{
 		requestTimeout:            requestTimeout,
@@ -120,9 +120,10 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 
 	if e.scrapeActive {
 		scrapeOK = false
-		log.Warning("Collect is still active... - Skipping now")
+		log.Warningln("Collect is still active... - Skipping now")
 		e.scrapeMutex.Unlock()
 	} else {
+		log.Debugln("Collect started")
 
 		e.scrapeActive = true
 		e.scrapeMutex.Unlock()
@@ -147,7 +148,27 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 		}
 
 		start = time.Now()
-		err = e.buildLustreThroughputMetrics(runningJobs, true)
+		users, err := createUserInfoMap()
+		elapsed = time.Since(start).Seconds()
+		e.stageExecutionMetric.WithLabelValues("retrieve_user_name_info").Set(elapsed)
+
+		if err != nil {
+			scrapeOK = false
+			log.Errorln(err)
+		}
+
+		start = time.Now()
+		groups, err := createGroupInfoMap()
+		elapsed = time.Since(start).Seconds()
+		e.stageExecutionMetric.WithLabelValues("retrieve_group_name_info").Set(elapsed)
+
+		if err != nil {
+			scrapeOK = false
+			log.Errorln(err)
+		}
+
+		start = time.Now()
+		err = e.buildLustreThroughputMetrics(runningJobs, users, groups, true)
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_read_throughput_metrics").Set(elapsed)
 
@@ -159,7 +180,7 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 		}
 
 		start = time.Now()
-		err = e.buildLustreThroughputMetrics(runningJobs, false)
+		err = e.buildLustreThroughputMetrics(runningJobs, users, groups, false)
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_write_throughput_metrics").Set(elapsed)
 
@@ -177,6 +198,8 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 		e.procWriteThroughputMetric.Collect(ch)
 
 		e.scrapeActive = false
+
+		log.Debugln("Collect finished")
 	}
 
 	if scrapeOK {
@@ -197,23 +220,23 @@ func (e *exporter) Describe(ch chan<- *prometheus.Desc) {
 	e.procWriteThroughputMetric.Describe(ch)
 }
 
-func (e *exporter) buildLustreThroughputMetrics(jobs *[]jobInfo, readFlag bool) error {
-
-	log.Debugln("Read flag:", readFlag)
-
-	if jobs == nil {
-		return errors.New("Parameter jobs was not initialized")
-	}
+func (e *exporter) buildLustreThroughputMetrics(jobs *[]jobInfo, users UserInfoMap, groups GroupInfoMap, read bool) error {
 
 	var url string
 	var jobMetric *prometheus.GaugeVec
 	var procMetric *prometheus.GaugeVec
 
-	if readFlag {
+	if jobs == nil {
+		return errors.New("Parameter jobs was not initialized")
+	}
+
+	if read {
+		log.Debugln("Process read throughput")
 		url = e.urlLustreJobReadBytes
 		jobMetric = e.jobReadThroughputMetric
 		procMetric = e.procReadThroughputMetric
 	} else {
+		log.Debugln("Process write throughput")
 		url = e.urlLustreJobWriteBytes
 		jobMetric = e.jobWriteThroughputMetric
 		procMetric = e.procWriteThroughputMetric
@@ -253,21 +276,29 @@ func (e *exporter) buildLustreThroughputMetrics(jobs *[]jobInfo, readFlag bool) 
 			fields := strings.Split(thInfo.jobid, ".")
 			lenFields := len(fields)
 
-			var procName string
-			var uid string
+			var procName, userName, groupName string
+			var uid int
 
+			// TODO: Check string to int conversion?
 			if lenFields == 2 {
 				procName = fields[0]
-				uid = fields[1]
+				uid, _ = strconv.Atoi(fields[1])
 			} else if lenFields > 2 {
 				lastFieldIdx := lenFields - 1
 				procName = strings.Join((fields[0:lastFieldIdx]), ".")
-				uid = fields[lastFieldIdx]
+				uid, _ = strconv.Atoi(fields[lastFieldIdx])
 			} else {
 				log.Fatal("To few Lustre Jobstats procname_uid fields:", thInfo.jobid)
 			}
 
-			procMetric.WithLabelValues(procName, uid).Add(thInfo.throughput)
+			// TODO: Check if values are in map...
+			userInfo, _ := users[uid]
+			userName = userInfo.user
+
+			groupInfo, _ := groups[userInfo.gid]
+			groupName = groupInfo.group
+
+			procMetric.WithLabelValues(procName, groupName, userName).Add(thInfo.throughput)
 		}
 	}
 

@@ -57,3 +57,9 @@ The following warning will be displayed on afterward scrape executions, were a s
     *"Collect is still active... - Skipping now"*
 
 Besides that, the cluster_exporter_scrape_ok metric will be set to 0 for skipped scrape attempts.
+
+## Building the Exporter
+
+```go
+go build -o cluster-exporter *.go
+```

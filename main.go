@@ -73,7 +73,7 @@ func main() {
 	metricsPath := "/metrics"
 	listenAddress := ":" + *port
 
-	log.Info("Started")
+	log.Info("Exporter started")
 
 	e := newExporter(*requestTimeout, *urlLustreJobReadBytes, *urlLustreJobWriteBytes)
 	prometheus.MustRegister(e)
@@ -94,5 +94,5 @@ func main() {
 		log.Error(err)
 	}
 
-	log.Info("Finished")
+	log.Info("Exporter finished")
 }
