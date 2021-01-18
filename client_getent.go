@@ -17,6 +17,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -49,7 +50,7 @@ func createUserInfoMap() (UserInfoMap, error) {
 	m = make(UserInfoMap)
 
 	if _, err := os.Stat(getentBin); os.IsNotExist(err) {
-		log.Fatal("Executable for getent not found under: ", getentBin)
+		log.Fatal(err)
 	}
 
 	cmd := exec.Command(getentBin, "passwd")
@@ -74,13 +75,32 @@ func createUserInfoMap() (UserInfoMap, error) {
 	// TrimSpace on []bytes is more efficient than calling TrimSpace on a string since it creates a copy
 	content := string(bytes.TrimSpace(out))
 
+	if len(content) == 0 {
+		return nil, errors.New("Retrieved content in createUserInfoMap() is empty")
+	}
+
 	lines := strings.Split(content, "\n")
 
 	for _, line := range lines {
+
 		fields := strings.SplitN(line, ":", 5)
+
+		if len(fields) < 4 {
+			return nil, errors.New("Insufficient field count found in line: " + line)
+		}
+
 		user := fields[0]
-		uid, _ := strconv.Atoi(fields[2])
-		gid, _ := strconv.Atoi(fields[3])
+
+		uid, err := strconv.Atoi(fields[2])
+		if err != nil {
+			return nil, err
+		}
+
+		gid, err := strconv.Atoi(fields[3])
+		if err != nil {
+			return nil, err
+		}
+
 		m[uid] = UserInfo{user, uid, gid}
 	}
 
@@ -93,7 +113,7 @@ func createGroupInfoMap() (GroupInfoMap, error) {
 	m = make(GroupInfoMap)
 
 	if _, err := os.Stat(getentBin); os.IsNotExist(err) {
-		log.Fatal("Executable for getent not found under: ", getentBin)
+		log.Fatal(err)
 	}
 
 	cmd := exec.Command(getentBin, "group")
@@ -118,12 +138,26 @@ func createGroupInfoMap() (GroupInfoMap, error) {
 	// TrimSpace on []bytes is more efficient than calling TrimSpace on a string since it creates a copy
 	content := string(bytes.TrimSpace(out))
 
+	if len(content) == 0 {
+		return nil, errors.New("Retrieved content in createGroupInfoMap() is empty")
+	}
+
 	lines := strings.Split(content, "\n")
 
 	for _, line := range lines {
 		fields := strings.SplitN(line, ":", 4)
+
+		if len(fields) < 3 {
+			return nil, errors.New("Insufficient field count found in line: " + line)
+		}
+
 		group := fields[0]
-		gid, _ := strconv.Atoi(fields[2])
+
+		gid, err := strconv.Atoi(fields[2])
+		if err != nil {
+			return nil, err
+		}
+
 		m[gid] = GroupInfo{group, gid}
 	}
 

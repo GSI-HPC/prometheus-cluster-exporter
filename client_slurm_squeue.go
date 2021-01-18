@@ -18,11 +18,10 @@ package main
 import (
 	"bytes"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type jobInfo struct {
@@ -33,10 +32,10 @@ type jobInfo struct {
 
 const squeueBin = "/usr/bin/squeue"
 
-func retrieveRunningJobs() (*[]jobInfo, error) {
+func retrieveRunningJobs() ([]jobInfo, error) {
 
 	if _, err := os.Stat(squeueBin); os.IsNotExist(err) {
-		log.Fatal("Executable for squeue not found under: ", squeueBin)
+		log.Fatal(err)
 	}
 
 	cmd := exec.Command(squeueBin, "-ah", "-o", "%A %a %u")
@@ -70,5 +69,5 @@ func retrieveRunningJobs() (*[]jobInfo, error) {
 		jobs[i] = jobInfo{fields[0], fields[1], fields[2]}
 	}
 
-	return &jobs, nil
+	return jobs, nil
 }

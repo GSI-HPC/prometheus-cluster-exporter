@@ -120,10 +120,10 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 
 	if e.scrapeActive {
 		scrapeOK = false
-		log.Warningln("Collect is still active... - Skipping now")
+		log.Warning("Collect is still active... - Skipping now")
 		e.scrapeMutex.Unlock()
 	} else {
-		log.Debugln("Collect started")
+		log.Debug("Collect started")
 
 		e.scrapeActive = true
 		e.scrapeMutex.Unlock()
@@ -199,7 +199,7 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 
 		e.scrapeActive = false
 
-		log.Debugln("Collect finished")
+		log.Debug("Collect finished")
 	}
 
 	if scrapeOK {
@@ -220,30 +220,38 @@ func (e *exporter) Describe(ch chan<- *prometheus.Desc) {
 	e.procWriteThroughputMetric.Describe(ch)
 }
 
-func (e *exporter) buildLustreThroughputMetrics(jobs *[]jobInfo, users UserInfoMap, groups GroupInfoMap, read bool) error {
+func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users UserInfoMap, groups GroupInfoMap, read bool) error {
 
 	var url string
 	var jobMetric *prometheus.GaugeVec
 	var procMetric *prometheus.GaugeVec
 
-	if jobs == nil {
-		return errors.New("Parameter jobs was not initialized")
+	if jobs == nil || len(jobs) == 0 {
+		return errors.New("Parameter jobs is not set or empty")
+	}
+
+	if users == nil || len(users) == 0 {
+		return errors.New("Parameter users is not set or empty")
+	}
+
+	if groups == nil || len(groups) == 0 {
+		return errors.New("Parameter groups is not set or empty")
 	}
 
 	if read {
-		log.Debugln("Process read throughput")
+		log.Debug("Process read throughput")
 		url = e.urlLustreJobReadBytes
 		jobMetric = e.jobReadThroughputMetric
 		procMetric = e.procReadThroughputMetric
 	} else {
-		log.Debugln("Process write throughput")
+		log.Debug("Process write throughput")
 		url = e.urlLustreJobWriteBytes
 		jobMetric = e.jobWriteThroughputMetric
 		procMetric = e.procWriteThroughputMetric
 	}
 
 	if log.IsLevelEnabled(log.DebugLevel) {
-		log.Debugln("URL:", url)
+		log.Debug("URL:", url)
 	}
 
 	content, err := httpRequest(url, e.requestTimeout)
@@ -252,20 +260,20 @@ func (e *exporter) buildLustreThroughputMetrics(jobs *[]jobInfo, users UserInfoM
 	}
 
 	if log.IsLevelEnabled(log.TraceLevel) {
-		log.Traceln("Bytes transmitted:", len(*content))
+		log.Trace("Bytes transmitted:", len(*content))
 	}
 
 	lustreThroughput := parseLustreTotalBytes(content)
 
 	if log.IsLevelEnabled(log.DebugLevel) {
-		log.Debugln("Count Lustre Jobstats:", len(*lustreThroughput))
+		log.Debug("Count Lustre Jobstats:", len(*lustreThroughput))
 	}
 
 	for _, thInfo := range *lustreThroughput {
 
 		if isNumber(&thInfo.jobid) { // SLURM Job
 
-			for _, job := range *jobs {
+			for _, job := range jobs {
 				if thInfo.jobid == job.jobid {
 					jobMetric.WithLabelValues(job.account, job.user).Add(thInfo.throughput)
 				}
@@ -279,25 +287,37 @@ func (e *exporter) buildLustreThroughputMetrics(jobs *[]jobInfo, users UserInfoM
 			var procName, userName, groupName string
 			var uid int
 
-			// TODO: Check string to int conversion?
 			if lenFields == 2 {
 				procName = fields[0]
-				uid, _ = strconv.Atoi(fields[1])
+
+				uid, err = strconv.Atoi(fields[1])
+				if err != nil {
+					return err
+				}
 			} else if lenFields > 2 {
 				lastFieldIdx := lenFields - 1
 				procName = strings.Join((fields[0:lastFieldIdx]), ".")
-				uid, _ = strconv.Atoi(fields[lastFieldIdx])
+
+				uid, err = strconv.Atoi(fields[lastFieldIdx])
+				if err != nil {
+					return err
+				}
 			} else {
-				log.Fatal("To few Lustre Jobstats procname_uid fields:", thInfo.jobid)
+				return errors.New("To few Lustre Jobstats procname_uid fields: " + thInfo.jobid)
 			}
 
-			// TODO: Check if values are in map...
-			userInfo, _ := users[uid]
+			userInfo, ok := users[uid]
+			if !ok {
+				return errors.New("uid not found in users map: " + strconv.Itoa(uid))
+			}
+
+			groupInfo, ok := groups[userInfo.gid]
+			if !ok {
+				return errors.New("gid not found in groups map: " + strconv.Itoa(userInfo.gid))
+			}
+
 			userName = userInfo.user
-
-			groupInfo, _ := groups[userInfo.gid]
 			groupName = groupInfo.group
-
 			procMetric.WithLabelValues(procName, groupName, userName).Add(thInfo.throughput)
 		}
 	}
@@ -324,7 +344,7 @@ func parseLustreTotalBytes(content *[]byte) *[]throughputInfo {
 
 		if err != nil {
 			// Might be the case with the exported Lustre jobstats. Cause not clear, need to check Lustre exporter.
-			log.Warningln("Key jobid not found in metric value:", string(value))
+			log.Warning("Key jobid not found in metric value:", string(value))
 		} else {
 			throughputStr, err := jsonparser.GetString(value, "value", "[1]")
 			if err != nil {
