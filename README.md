@@ -18,6 +18,10 @@ https://github.com/HewlettPackard/lustre_exporter
 
 The squeue command from SLURM must be accessable locally to the exporter to retrieve the running jobs.
 
+### Getent
+
+The getent command is required for the uid to user and group mapping used for the process names throughput metrics.
+
 ## Metrics
 
 Cluster exporter metrics are prefixed with "cluster_".
