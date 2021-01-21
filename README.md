@@ -67,25 +67,3 @@ Besides that, the cluster_exporter_scrape_ok metric will be set to 0 for skipped
 ```go
 go build -o cluster-exporter *.go
 ```
-
-## Known Issues / Future Work
-
-### Running Multiple Cluster Exporter for a Lustre Instance
-
-#### Description
-
-Since the cluster exporter exports the to be processed Lustre Jobstats out of Prometheus, this has significant disadvantages, when multiple cluster exporter should be used for the same Lustre instance:
-
-1. Costs of Resources  
-If the amount of exported jobstats gets high, this will lead to timeouts in the build\_read/write\_throughput\_metrics stage.
-
-2. Conflict with procname\_uid Jobstats  
-If more than one cluster exporter is used and the Lustre clients are set to the jobstats option procname_uid for non-cluster machines e.g. submit-nodes or service machines that acccess Lustre directly,  
-the exporter will process the same jobstats for processes each time.  This might result in to high calculated throughput values for the same scrape point by multiple cluster exporter.  
-
-
-#### Solution
-
-By using the Lustre Complex JobID feature it could be distinguished between different Lustre client groups e.g. compute cluster and service machine groups.  
-With such an identification of groups, multiple cluster exporter could be used to just process a specific group.  
-
