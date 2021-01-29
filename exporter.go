@@ -227,15 +227,15 @@ func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users UserInfoMa
 	var procMetric *prometheus.GaugeVec
 
 	if jobs == nil || len(jobs) == 0 {
-		return errors.New("Parameter jobs is not set or empty")
+		return errors.New("Parameter jobs is not set")
 	}
 
 	if users == nil || len(users) == 0 {
-		return errors.New("Parameter users is not set or empty")
+		return errors.New("Parameter users is not set")
 	}
 
 	if groups == nil || len(groups) == 0 {
-		return errors.New("Parameter groups is not set or empty")
+		return errors.New("Parameter groups is not set")
 	}
 
 	if read {
