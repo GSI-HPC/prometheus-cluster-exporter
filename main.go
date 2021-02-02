@@ -56,10 +56,10 @@ func main() {
 
 	printVersion := flag.Bool("version", false, "Print version")
 	logLevel := flag.String("log", defaultLogLevel, "Sets log level - INFO, DEBUG or TRACE")
-	port := flag.String("port", defaultPort, "The port to listen on for HTTP requests.")
-	requestTimeout := flag.Int("timeout", defaultRequestTimeout, "HTTP request timeout for exporting Lustre Jobstats on Prometheus HTTP API")
-	urlLustreJobReadBytes := flag.String("urlReads", defaultURLLustreJobReadBytes, "URL with the query to the Prometheus HTTP API that exports the aggregated Lustre jobstats for the lustre_job_read_bytes_total")
-	urlLustreJobWriteBytes := flag.String("urlWrites", defaultURLLustreJobWriteBytes, "URL with the query to the Prometheus HTTP API that exports the aggregated Lustre jobstats for the lustre_job_write_bytes_total")
+	port := flag.String("port", defaultPort, "The port to listen on for HTTP requests")
+	requestTimeout := flag.Int("timeout", defaultRequestTimeout, "HTTP request timeout in seconds for exporting Lustre Jobstats on Prometheus HTTP API")
+	urlLustreJobReadBytes := flag.String("urlReads", defaultURLLustreJobReadBytes, "Query URL to the Prometheus HTTP API that exports the Lustre jobstats read throughput rate")
+	urlLustreJobWriteBytes := flag.String("urlWrites", defaultURLLustreJobWriteBytes, "Query URL to the Prometheus HTTP API that exports the Lustre jobstats write throughput rate")
 
 	flag.Parse()
 
