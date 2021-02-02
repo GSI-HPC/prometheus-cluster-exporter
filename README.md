@@ -8,11 +8,11 @@ A Prometheus exporter for Lustre IO throughput metrics associated to SLURM accou
 
 A Lustre exporter that exposes the two metrics to Prometheus with a label jobid is required:
 
-* lustre_job_read_bytes_total
-* lustre_job_write_bytes_total
+* lustre\_job\_read\_bytes\_total
+* lustre\_job\_write\_bytes\_total
 
 The Lustre exporter from HP provides such metrics:
-https://github.com/HewlettPackard/lustre_exporter
+https://github.com/HewlettPackard/lustre\_exporter
 
 ### Squeue Command
 
@@ -30,26 +30,26 @@ Cluster exporter metrics are prefixed with "cluster_".
 
 These metrics are always exported.
 
-| Metric                           | Labels        | Description                                                       |
-| -------------------------------- | ------------- | ----------------------------------------------------------------- |
-| exporter_scrape_ok               | -             | Indicates if the scrape of the exporter was successful or not.    |
-| exporter_stage_execution_seconds | name          | Execution duration in seconds spend in a specific exporter stage. |
+| Metric                              | Labels        | Description                                                       |
+| ----------------------------------- | ------------- | ----------------------------------------------------------------- |
+| exporter\_scrape\_ok                | -             | Indicates if the scrape of the exporter was successful or not.    |
+| exporter\_stage\_execution\_seconds | name          | Execution duration in seconds spend in a specific exporter stage. |
 
 ### Throughput
 
 #### **Jobs**
 
-| Metric                     | Labels        | Description                                                                           |
-| -------------------------- | ------------- | ------------------------------------------------------------------------------------- |
-| job_read_throughput_bytes  | account, user | Total IO read throughput of all jobs on the cluster per account in bytes per second.  |
-| job_write_throughput_bytes | account, user | Total IO write throughput of all jobs on the cluster per account in bytes per second. |
+| Metric                        | Labels        | Description                                                                           |
+| ----------------------------- | ------------- | ------------------------------------------------------------------------------------- |
+| job\_read\_throughput\_bytes  | account, user | Total IO read throughput of all jobs on the cluster per account in bytes per second.  |
+| job\_write\_throughput\_bytes | account, user | Total IO write throughput of all jobs on the cluster per account in bytes per second. |
 
 #### **Process Names**
 
-| Metric                      | Labels                           | Description                                                                                       |
-| --------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------- |
-| proc_read_throughput_bytes  | proc_name, user_name, group_name | Total IO read throughput of process names on the cluster per group and user in bytes per second.  |
-| proc_write_throughput_bytes | proc_name, user_name, group_name | Total IO write throughput of process names on the cluster per group and user in bytes per second. |
+| Metric                         | Labels                              | Description                                                                                       |
+| ------------------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------- |
+| proc\_read\_throughput\_bytes  | proc\_name, user\_name, group\_name | Total IO read throughput of process names on the cluster per group and user in bytes per second.  |
+| proc\_write\_throughput\_bytes | proc\_name, user\_name, group\_name | Total IO write throughput of process names on the cluster per group and user in bytes per second. |
 
 ## Multiple Srape Prevention
 
@@ -60,7 +60,7 @@ Therefore multiple scrapes at a time will be prevented by the exporter.
 The following warning will be displayed on afterward scrape executions, were a scrape is still active:  
     *"Collect is still active... - Skipping now"*
 
-Besides that, the cluster_exporter_scrape_ok metric will be set to 0 for skipped scrape attempts.  
+Besides that, the cluster\_exporter\_scrape\_ok metric will be set to 0 for skipped scrape attempts.  
 
 ## Building the Exporter
 
