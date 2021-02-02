@@ -27,25 +27,28 @@ The getent command is required for the uid to user and group mapping used for th
 
 ## Parameter
 
-| Name     | Default           | Description                                                                                                                        |
-| -------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| log      | INFO              | Logging level                                                                                                                      | 
-| port     | 9166              | The port to listen on for HTTP requests                                                                                            |
-| timeout  | 15                | HTTP request timeout in seconds for exporting Lustre Jobstats on Prometheus HTTP API                                               |
-| urlReads | Site specific URL | Query URL to the Prometheus HTTP API that exports the Lustre jobstats read throughput rate                                         |
-| urlWrite | Site specific URL | Query URL to the Prometheus HTTP API that exports the Lustre jobstats write throughput rate                                        |
+| Name      | Default           | Description                                                                                                                        |
+| --------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| log       | INFO              | Logging level                                                                                                                      | 
+| port      | 9166              | The port to listen on for HTTP requests                                                                                            |
+| timeout   | 15                | HTTP request timeout in seconds for exporting Lustre Jobstats on Prometheus HTTP API                                               |
+| urlReads  | Site specific URL | Query URL to the Prometheus HTTP API that exports the Lustre jobstats read throughput rate                                         |
+| urlWrites | Site specific URL | Query URL to the Prometheus HTTP API that exports the Lustre jobstats write throughput rate                                        |
 
 ## Exporting Lustre Jobstats Throughput Rate
 
 The Lustre jobstats throughput rates are calculated on the Prometheus server and exported via HTTP API.  
 
-Format of the HTTP query for setting urlReads and urlWrites parameter:
+A HTTP query for setting the urlReads and urlWrites parameter consists of:
 
 * Server endpoint = `http://prom-server:9090/`
-* HTTP API = `api/v1/query?query=`
-* Query string with special character in UTF-8 hexadecimal:
+* HTTP API endpoint = `api/v1/query`
+* Query parameter = `?query=`
+* Query string:
     * Reads = `sum%20by%28jobid%29%28irate%28lustre_job_write_bytes_total[1m]%29!=0%29`
     * Writes = `sum%20by%28jobid%29%28irate%28lustre_job_write_bytes_total[1m]%29!=0%29`
+
+> Some special character are defined in UTF-8 hexadecimal in the query strings.
 
 ## Metrics
 
