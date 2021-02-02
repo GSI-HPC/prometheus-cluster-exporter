@@ -1,6 +1,7 @@
 # Prometheus Cluster Exporter
 
-A Prometheus exporter for Lustre IO throughput metrics associated to SLURM accounts and process names on a cluster.
+A Prometheus exporter for Lustre IO throughput metrics associated to SLURM accounts  
+and process names with user and group information on a cluster.
 
 ## Requirements
 
@@ -16,7 +17,10 @@ https://github.com/HewlettPackard/lustre\_exporter
 
 ### Squeue Command
 
-The squeue command from SLURM must be accessable locally to the exporter to retrieve the running jobs.
+The squeue command from SLURM must be accessable locally to the exporter to retrieve the running jobs.  
+
+For instance running the exporter on the SLURM controller is advisable, since the target host should be  
+most stable for a productional environment.
 
 ### Getent
 
