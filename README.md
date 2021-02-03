@@ -25,7 +25,9 @@ most stable for a productional environment.
 
 The getent command is required for the uid to user and group mapping used for the process names throughput metrics.
 
-## Parameter
+## Execution
+
+### Parameter
 
 | Name      | Default           | Description                                                                                                                        |
 | --------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -35,7 +37,7 @@ The getent command is required for the uid to user and group mapping used for th
 | urlReads  | Site specific URL | Query URL to the Prometheus HTTP API that exports the Lustre jobstats read throughput rate                                         |
 | urlWrites | Site specific URL | Query URL to the Prometheus HTTP API that exports the Lustre jobstats write throughput rate                                        |
 
-## Exporting Lustre Jobstats Throughput Rate
+### Exporting Lustre Jobstats Throughput Rate
 
 The Lustre jobstats throughput rates are calculated on the Prometheus server and exported via HTTP API.  
 
@@ -49,6 +51,11 @@ A HTTP query for setting the urlReads and urlWrites parameter consists of:
     * Writes = `sum%20by%28jobid%29%28irate%28lustre_job_write_bytes_total[1m]%29!=0%29`
 
 > Some special character are defined in UTF-8 hexadecimal in the query strings.
+
+### Running in a Productive Environment
+
+For a productive environment it is advisable to run the exporter on the SLURM controller,  
+since the target host should be most stable.
 
 ## Metrics
 
