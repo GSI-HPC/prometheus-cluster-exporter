@@ -43,12 +43,12 @@ The Lustre jobstats throughput rates are calculated on the Prometheus server and
 
 A HTTP query for setting the urlReads and urlWrites parameter consists of:
 
-* Server endpoint = `http://prom-server:9090/`
-* HTTP API endpoint = `api/v1/query`
-* Query parameter = `?query=`
-* Query string:
-    * Reads = `sum%20by%28jobid%29%28irate%28lustre_job_write_bytes_total[1m]%29!=0%29`
-    * Writes = `sum%20by%28jobid%29%28irate%28lustre_job_write_bytes_total[1m]%29!=0%29`
+* Server endpoint: `http://prom-server:9090/`
+* HTTP API endpoint: `api/v1/query`
+* Query parameter: `?query=`
+* Query string
+    * Reads: `sum%20by%28jobid%29%28irate%28lustre_job_write_bytes_total[1m]%29!=0%29`
+    * Writes: `sum%20by%28jobid%29%28irate%28lustre_job_write_bytes_total[1m]%29!=0%29`
 
 > Some special character are defined in UTF-8 hexadecimal in the query strings.
 
