@@ -57,6 +57,13 @@ A HTTP query for setting the urlReads and urlWrites parameter consists of:
 For a productive environment it is advisable to run the exporter on the SLURM controller,  
 since the target host should be most stable.
 
+### Prometheus Scrape Settings
+
+Depending on the required resolution and runtimes of an exporter  
+the `scrape interval` should be set as appropriate e.g. at least 1m or higher.  
+
+The `scrape timeout` should also be set, but close to the specific scrape interval.
+
 ## Metrics
 
 Cluster exporter metrics are prefixed with "cluster_".
