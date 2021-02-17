@@ -3,6 +3,10 @@
 A Prometheus exporter for Lustre IO throughput metrics associated to SLURM accounts  
 and process names with user and group information on a cluster.
 
+## Building
+
+`go build -o cluster_exporter *.go`
+
 ## Requirements
 
 ### Lustre Exporter
@@ -104,8 +108,3 @@ The following warning will be displayed on afterward scrape executions, were a s
 
 Besides that, the cluster\_exporter\_scrape\_ok metric will be set to 0 for skipped scrape attempts.  
 
-## Building the Exporter
-
-```go
-go build -o cluster-exporter *.go
-```
