@@ -3,6 +3,8 @@
 A Prometheus exporter for Lustre IO throughput metrics associated to SLURM accounts  
 and process names with user and group information on a cluster.
 
+[Grafana dashboard](https://grafana.com/grafana/dashboards/14668)
+
 ## Building
 
 `go build -o cluster_exporter *.go`
@@ -11,12 +13,10 @@ and process names with user and group information on a cluster.
 
 ### Lustre Exporter
 
-A Lustre exporter that exposes the two metrics to Prometheus with a label jobid is required:
+A [Lustre exporter](https://github.com/GSI-HPC/lustre_exporter) that exposes the two metrics to Prometheus with a label jobid is required:
 
 * lustre\_job\_read\_bytes\_total
 * lustre\_job\_write\_bytes\_total
-
-The Lustre exporter from HP provides such metrics: https://github.com/HewlettPackard/lustre\_exporter
 
 ### Squeue Command
 
