@@ -1,5 +1,6 @@
 [Unit]
 Description=Prometheus Cluster Exporter
+After=network.target
 
 [Service]
 ExecStart=/usr/bin/cluster_exporter
