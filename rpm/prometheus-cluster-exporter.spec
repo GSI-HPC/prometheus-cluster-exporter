@@ -3,7 +3,7 @@
 %define        __os_install_post %{_dbpath}/brp-compress
 
 Name:           prometheus-cluster-exporter
-Version:        1.0
+Version:        1.1
 Release:        1%{?dist}
 Summary:        Prometheus exporter for Lustre IO throughput metrics associated to SLURM accounts and processes on a cluster.
 Group:          Monitoring
@@ -65,7 +65,3 @@ systemctl start %{name}.service
 %{_bindir}/cluster_exporter
 %{_unitdir}/%{name}.service
 %attr(755, prometheus, prometheus)/var/lib/prometheus
-
-%changelog
-* Tue Dec 1 2020 Gabriele Iannetti <g.iannetti@gsi.de> - 1.0
-- Full changelog: https://github.com/GSI-HPC/prometheus-cluster-exporter/releases/tag/1.0
