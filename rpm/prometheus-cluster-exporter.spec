@@ -35,7 +35,7 @@ Prometheus exporter for Lustre IO throughput metrics associated to SLURM account
 rm -rf %{buildroot}
 mkdir -vp  %{buildroot}
 mkdir -vp %{buildroot}%{_unitdir}/
-mkdir -vp %{buildroot}/var/lib/prometheus
+cp usr/lib/systemd/system/%{name}.service %{buildroot}%{_unitdir}/
 
 # in builddir
 cp -a * %{buildroot}
@@ -64,4 +64,3 @@ systemctl start %{name}.service
 %defattr(-,root,root,-)
 %{_bindir}/cluster_exporter
 %{_unitdir}/%{name}.service
-%attr(755, prometheus, prometheus)/var/lib/prometheus
