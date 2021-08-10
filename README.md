@@ -43,7 +43,7 @@ The getent command is required for the uid to user and group mapping used for th
 | Name      | Default           | Description                                                                                                                        |
 | --------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | log       | INFO              | Logging level                                                                                                                      | 
-| port      | 9166              | The port to listen on for HTTP requests                                                                                            |
+| port      | 9846              | The port to listen on for HTTP requests                                                                                            |
 | timeout   | 15                | HTTP request timeout in seconds for exporting Lustre Jobstats on Prometheus HTTP API                                               |
 | urlReads  | Site specific URL | Query URL to the Prometheus HTTP API that exports the Lustre jobstats read throughput rate                                         |
 | urlWrites | Site specific URL | Query URL to the Prometheus HTTP API that exports the Lustre jobstats write throughput rate                                        |
