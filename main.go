@@ -27,10 +27,10 @@ import (
 )
 
 const (
-	version                       = "1.1"
+	version                       = "1.1.1"
 	namespace                     = "cluster"
 	namespaceInternals            = "cluster_exporter"
-	defaultPort                   = "9166" // Port already in use by Dovecot exporter (https://github.com/prometheus/prometheus/wiki/Default-port-allocations)
+	defaultPort                   = "9846"
 	defaultRequestTimeout         = 15
 	defaultLogLevel               = "INFO" // [INFO || DEBUG || TRACE]
 	defaultURLLustreJobReadBytes  = "http://lustre-monitoring.gsi.de:9090/api/v1/query?query=sum%20by%28jobid%29%28irate%28lustre_job_read_bytes_total[1m]%29!=0%29"
