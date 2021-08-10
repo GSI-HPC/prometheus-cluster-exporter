@@ -1,13 +1,20 @@
 # Prometheus Cluster Exporter
 
-A Prometheus exporter for Lustre IO throughput metrics associated to SLURM accounts  
+A [Prometheus](https://prometheus.io/) exporter for Lustre IO throughput metrics associated to SLURM accounts  
 and process names with user and group information on a cluster.
 
-[Grafana dashboard](https://grafana.com/grafana/dashboards/14668)
+[Grafana dashboard](https://grafana.com/grafana/dashboards/14668) is also available.
+
+## Getting
+
+`go get github.com/GSI-HPC/prometheus-cluster-exporter`
 
 ## Building
 
-`go build -o cluster_exporter *.go`
+```
+cd $GOPATH/src/github.com/GSI-HPC/prometheus-cluster-exporter
+go build -o cluster_exporter *.go
+```
 
 ## Requirements
 
