@@ -3,7 +3,7 @@ Description=Prometheus Cluster Exporter
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/cluster_exporter
+ExecStart=/usr/bin/prometheus-cluster-exporter
 User=prometheus
 Restart=always
 RestartSec=60

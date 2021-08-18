@@ -46,7 +46,7 @@ rm -rf %{buildroot}
 %pre
 getent group prometheus >/dev/null || groupadd -r prometheus
 getent passwd prometheus >/dev/null || \
-    useradd -r -g prometheus -d /var/lib/cluster_exporter -s /sbin/nologin \
+    useradd -r -g prometheus -d /var/lib/prometheus-cluster-exporter -s /sbin/nologin \
     -c "Prometheus exporter user" prometheus
 exit 0
 
@@ -62,5 +62,5 @@ systemctl start %{name}.service
 
 %files
 %defattr(-,root,root,-)
-%{_bindir}/cluster_exporter
+%{_bindir}/prometheus-cluster-exporter
 %{_unitdir}/%{name}.service

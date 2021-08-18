@@ -8,7 +8,7 @@ Create required rpmbuild directory structure in the users home directory:
 
 Provide the following files to build the rpm package:  
 
-* `~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.1/usr/bin/cluster_exporter`
+* `~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.1/usr/bin/prometheus-cluster-exporter`
 * `~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.1/usr/lib/systemd/system/prometheus-cluster-exporter.service`
 * `~/rpmbuild/SPECS/prometheus-cluster-exporter.spec`
 
