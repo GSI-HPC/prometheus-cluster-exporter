@@ -27,14 +27,14 @@ import (
 )
 
 const (
-	version                       = "1.1.1"
+	version                       = "1.1.2"
 	namespace                     = "cluster"
 	namespaceInternals            = "cluster_exporter"
 	defaultPort                   = "9846"
 	defaultRequestTimeout         = 15
 	defaultLogLevel               = "INFO" // [INFO || DEBUG || TRACE]
-	defaultURLLustreJobReadBytes  = "http://lustre-monitoring.gsi.de:9090/api/v1/query?query=sum%20by%28jobid%29%28irate%28lustre_job_read_bytes_total[1m]%29!=0%29"
-	defaultURLLustreJobWriteBytes = "http://lustre-monitoring.gsi.de:9090/api/v1/query?query=sum%20by%28jobid%29%28irate%28lustre_job_write_bytes_total[1m]%29!=0%29"
+	defaultURLLustreJobReadBytes  = "http://prom-server:9090/api/v1/query?query=sum%20by%28jobid%29%28irate%28lustre_job_read_bytes_total[1m]%29!=0%29"
+	defaultURLLustreJobWriteBytes = "http://prom-server:9090/api/v1/query?query=sum%20by%28jobid%29%28irate%28lustre_job_write_bytes_total[1m]%29!=0%29"
 )
 
 func initLogging(logLevel string) {
