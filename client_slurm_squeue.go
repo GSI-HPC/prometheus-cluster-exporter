@@ -19,7 +19,6 @@ import (
 	"bytes"
 	"io/ioutil"
 	"log"
-	"os"
 	"os/exec"
 	"strings"
 )
@@ -30,30 +29,35 @@ type jobInfo struct {
 	user    string
 }
 
-const squeueBin = "/usr/bin/squeue"
+const SQUEUE = "squeue"
 
 func retrieveRunningJobs() ([]jobInfo, error) {
 
-	if _, err := os.Stat(squeueBin); os.IsNotExist(err) {
+	_, err := exec.LookPath(SQUEUE)
+	if err != nil {
 		log.Fatal(err)
 	}
 
-	cmd := exec.Command(squeueBin, "-ah", "-o", "%A %a %u")
+	cmd := exec.Command(SQUEUE, "-ah", "-o", "%A %a %u")
 
 	pipe, err := cmd.StdoutPipe()
-
 	if err != nil {
 		return nil, err
 	}
 
-	if err := cmd.Start(); err != nil {
+	err = cmd.Start()
+	if err != nil {
 		return nil, err
 	}
 
 	out, err := ioutil.ReadAll(pipe)
+	if err != nil {
+		return nil, err
+	}
 
 	// TODO Timeout handling?
-	if err := cmd.Wait(); err != nil {
+	err = cmd.Wait()
+	if err != nil {
 		return nil, err
 	}
 
