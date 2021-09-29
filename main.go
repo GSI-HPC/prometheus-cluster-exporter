@@ -1,4 +1,4 @@
-// Copyright 2020 Gabriele Iannetti <g.iannetti@gsi.de>
+// Copyright 2021 Gabriele Iannetti <g.iannetti@gsi.de>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,14 +27,15 @@ import (
 )
 
 const (
-	version                       = "1.1.2"
-	namespace                     = "cluster"
-	namespaceInternals            = "cluster_exporter"
-	defaultPort                   = "9846"
-	defaultRequestTimeout         = 15
-	defaultLogLevel               = "INFO" // [INFO || DEBUG || TRACE]
-	defaultURLLustreJobReadBytes  = "http://prom-server:9090/api/v1/query?query=sum%20by%28jobid%29%28irate%28lustre_job_read_bytes_total[1m]%29!=0%29"
-	defaultURLLustreJobWriteBytes = "http://prom-server:9090/api/v1/query?query=sum%20by%28jobid%29%28irate%28lustre_job_write_bytes_total[1m]%29!=0%29"
+	version                            = "1.1.3"
+	namespace                          = "cluster"
+	namespaceInternals                 = "cluster_exporter"
+	defaultPort                        = "9846"
+	defaultRequestTimeout              = 15
+	defaultLogLevel                    = "INFO" // [INFO || DEBUG || TRACE]
+	defaulturlLustreMetadataOperations = "http://prom-server:9090/api/v1/query?query=round%28sum%20by%28jobid%29%28irate%28lustre_job_stats_total[1m]%29%3E=1%29%29"
+	defaultURLLustreJobReadBytes       = "http://prom-server:9090/api/v1/query?query=sum%20by%28jobid%29%28irate%28lustre_job_read_bytes_total[1m]%29!=0%29"
+	defaultURLLustreJobWriteBytes      = "http://prom-server:9090/api/v1/query?query=sum%20by%28jobid%29%28irate%28lustre_job_write_bytes_total[1m]%29!=0%29"
 )
 
 func initLogging(logLevel string) {
@@ -58,6 +59,7 @@ func main() {
 	logLevel := flag.String("log", defaultLogLevel, "Sets log level - INFO, DEBUG or TRACE")
 	port := flag.String("port", defaultPort, "The port to listen on for HTTP requests")
 	requestTimeout := flag.Int("timeout", defaultRequestTimeout, "HTTP request timeout in seconds for exporting Lustre Jobstats on Prometheus HTTP API")
+	urlLustreMetadataOperations := flag.String("urlMetadata", defaulturlLustreMetadataOperations, "Query URL to the Prometheus HTTP API that exports the Lustre metadata operations rate")
 	urlLustreJobReadBytes := flag.String("urlReads", defaultURLLustreJobReadBytes, "Query URL to the Prometheus HTTP API that exports the Lustre jobstats read throughput rate")
 	urlLustreJobWriteBytes := flag.String("urlWrites", defaultURLLustreJobWriteBytes, "Query URL to the Prometheus HTTP API that exports the Lustre jobstats write throughput rate")
 
@@ -75,7 +77,7 @@ func main() {
 
 	log.Info("Exporter started")
 
-	e := newExporter(*requestTimeout, *urlLustreJobReadBytes, *urlLustreJobWriteBytes)
+	e := newExporter(*requestTimeout, *urlLustreMetadataOperations, *urlLustreJobReadBytes, *urlLustreJobWriteBytes)
 	prometheus.MustRegister(e)
 
 	http.Handle(metricsPath, promhttp.Handler())

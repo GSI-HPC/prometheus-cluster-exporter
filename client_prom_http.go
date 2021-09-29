@@ -27,6 +27,8 @@ func httpRequest(url string, requestTimeout int) (*[]byte, error) {
 
 	var client = http.Client{Timeout: time.Second * time.Duration(requestTimeout)}
 
+	log.Debug("Trying HTTP request for URL on Prometheus server: ", url)
+
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		log.Fatal(err)
