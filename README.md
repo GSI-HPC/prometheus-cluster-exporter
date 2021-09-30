@@ -1,6 +1,6 @@
 # Prometheus Cluster Exporter
 
-A [Prometheus](https://prometheus.io/) exporter for Lustre IO throughput metrics associated to SLURM accounts  
+A [Prometheus](https://prometheus.io/) exporter for Lustre metadata operations and IO throughput metrics associated to SLURM accounts  
 and process names with user and group information on a cluster.
 
 [Grafana dashboard](https://grafana.com/grafana/dashboards/14668) is also available.
@@ -13,15 +13,16 @@ and process names with user and group information on a cluster.
 
 ```
 cd $GOPATH/src/github.com/GSI-HPC/prometheus-cluster-exporter
-go build -o prometheus-cluster-exporter *.go
+go build
 ```
 
 ## Requirements
 
 ### Lustre Exporter
 
-A [Lustre exporter](https://github.com/GSI-HPC/lustre_exporter) that exposes the two metrics to Prometheus with a label jobid is required:
+A [Lustre exporter](https://github.com/GSI-HPC/lustre_exporter) that exposes the following metrics to Prometheus:
 
+* lustre\_job\_stats\_total
 * lustre\_job\_read\_bytes\_total
 * lustre\_job\_write\_bytes\_total
 
@@ -88,6 +89,21 @@ These metrics are always exported.
 | exporter\_scrape\_ok                | -             | Indicates if the scrape of the exporter was successful or not.    |
 | exporter\_stage\_execution\_seconds | name          | Execution duration in seconds spend in a specific exporter stage. |
 
+### Metadata
+
+#### **Jobs**
+
+| Metric                     | Labels        | Description                                                 |
+| ---------------------------| ------------- | ----------------------------------------------------------- |
+| job\_metadata\_operations  | account, user | Total metadata operations of all jobs per account and user. |
+
+#### **Process Names**
+
+| Metric                     | Labels                              | Description                                                     |
+| -------------------------- | ----------------------------------- | --------------------------------------------------------------- |
+| proc\_metadata\_operations | proc\_name, group\_name, user\_name | Total metadata operations of process names per group and user.  |
+
+
 ### Throughput
 
 #### **Jobs**
@@ -101,8 +117,8 @@ These metrics are always exported.
 
 | Metric                         | Labels                              | Description                                                                                       |
 | ------------------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------- |
-| proc\_read\_throughput\_bytes  | proc\_name, user\_name, group\_name | Total IO read throughput of process names on the cluster per group and user in bytes per second.  |
-| proc\_write\_throughput\_bytes | proc\_name, user\_name, group\_name | Total IO write throughput of process names on the cluster per group and user in bytes per second. |
+| proc\_read\_throughput\_bytes  | proc\_name, group\_name, user\_name | Total IO read throughput of process names on the cluster per group and user in bytes per second.  |
+| proc\_write\_throughput\_bytes | proc\_name, group\_name, user\_name | Total IO write throughput of process names on the cluster per group and user in bytes per second. |
 
 ## Multiple Srape Prevention
 
