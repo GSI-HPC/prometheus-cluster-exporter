@@ -13,7 +13,7 @@ and process names with user and group information on a cluster.
 
 ```
 cd $GOPATH/src/github.com/GSI-HPC/prometheus-cluster-exporter
-go build
+go build -o prometheus-cluster-exporter *.go
 ```
 
 ## Requirements
