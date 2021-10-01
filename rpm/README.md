@@ -21,7 +21,7 @@ Create the tar ball:
 * `cd ~/rpmbuild/SOURCES`
 * `tar -czvf prometheus-cluster-exporter-1.1.3.tar.gz prometheus-cluster-exporter-1.1.3`
 
-    Use relative paths here, otherwise rpmbuild will not find the extracted files!
+> Use relative paths here, otherwise rpmbuild will not find the extracted files!
 
 Create RPM package:  
 

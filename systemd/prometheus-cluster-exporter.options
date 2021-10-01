@@ -1,3 +1,2 @@
-PROMSERVER=prometheus-server:9090
-
-OPTIONS="--promserver={$PROMSERVER}"
+OPTIONS="--promserver=prometheus-server:9090"
+"
