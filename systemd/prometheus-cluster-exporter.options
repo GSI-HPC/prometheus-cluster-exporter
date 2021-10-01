@@ -1,3 +1,3 @@
-SERVER=prom-server:9090
+PROMSERVER=prometheus-server:9090
 
-OPTIONS="--urlReads=http://${SERVER}/api/v1/query\?query\=sum%20by%28jobid%29%28irate%28lustre_job_read_bytes_total\[1m\]%29\!\=0%29 --urlWrites=http://${SERVER}/api/v1/query\?query\=sum%20by%28jobid%29%28irate%28lustre_job_write_bytes_total\[1m\]%29\!\=0%29"
+OPTIONS="--promserver={$PROMSERVER}"
