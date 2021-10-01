@@ -63,6 +63,6 @@ systemctl start %{name}.service
 
 %files
 %defattr(-,root,root,-)
-%config /etc/sysconfig/prometheus-cluster-exporter.options
+%config /etc/default/prometheus-cluster-exporter.options
 %{_bindir}/prometheus-cluster-exporter
 %{_unitdir}/%{name}.service

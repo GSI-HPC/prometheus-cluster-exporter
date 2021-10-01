@@ -4,13 +4,13 @@ Create required rpmbuild directory structure in the users home directory:
 
 * `mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}`
 * `mkdir -p ~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.3/usr/bin/`
-* `mkdir -p ~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.3/etc/sysconfig/`
+* `mkdir -p ~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.3/etc/default/`
 * `mkdir -p ~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.3/usr/lib/systemd/system/`
 
 Provide the following files to build the rpm package:  
 
 * `~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.3/usr/bin/prometheus-cluster-exporter`
-* `~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.3/etc/sysconfig/prometheus-cluster-exporter.options`
+* `~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.3/etc/default/prometheus-cluster-exporter.options`
 * `~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.3/usr/lib/systemd/system/prometheus-cluster-exporter.service`
 * `~/rpmbuild/SPECS/prometheus-cluster-exporter.spec`
 

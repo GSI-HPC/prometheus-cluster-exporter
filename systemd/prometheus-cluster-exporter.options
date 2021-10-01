@@ -1,2 +1,1 @@
-OPTIONS="--promserver=prometheus-server:9090"
-"
+OPTIONS="--promserver=http://prometheus-server:9090"

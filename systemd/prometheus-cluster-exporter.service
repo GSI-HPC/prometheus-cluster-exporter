@@ -3,7 +3,7 @@ Description=Prometheus Cluster Exporter
 After=network.target
 
 [Service]
-EnvironmentFile=/etc/sysconfig/prometheus-cluster-exporter.options
+EnvironmentFile=/etc/default/prometheus-cluster-exporter.options
 ExecStart=/usr/bin/prometheus-cluster-exporter $OPTIONS
 User=prometheus
 Restart=always
