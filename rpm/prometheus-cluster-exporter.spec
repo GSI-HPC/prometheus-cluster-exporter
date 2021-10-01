@@ -3,7 +3,7 @@
 %define        __os_install_post %{_dbpath}/brp-compress
 
 Name:           prometheus-cluster-exporter
-Version:        1.1.2
+Version:        1.1.3
 Release:        1%{?dist}
 Summary:        Prometheus exporter for Lustre IO throughput metrics associated to SLURM accounts and processes on a cluster.
 Group:          Monitoring
@@ -23,7 +23,8 @@ BuildRequires:  systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-1-root
 
 %description
-Prometheus exporter for Lustre IO throughput metrics associated to SLURM accounts and processes on a cluster.
+A Prometheus exporter for Lustre metadata operations and IO throughput metrics associated to SLURM accounts
+and process names with user and group information on a cluster.
 
 %prep
 %setup -q

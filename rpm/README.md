@@ -3,23 +3,23 @@
 Create required rpmbuild directory structure in the users home directory:  
 
 * `mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}`
-* `mkdir -p ~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.2/usr/bin/`
-* `mkdir -p ~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.2/etc/sysconfig/`
-* `mkdir -p ~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.2/usr/lib/systemd/system/`
+* `mkdir -p ~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.3/usr/bin/`
+* `mkdir -p ~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.3/etc/sysconfig/`
+* `mkdir -p ~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.3/usr/lib/systemd/system/`
 
 Provide the following files to build the rpm package:  
 
-* `~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.2/usr/bin/prometheus-cluster-exporter`
-* `~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.2/etc/sysconfig/prometheus-cluster-exporter.options`
-* `~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.2/usr/lib/systemd/system/prometheus-cluster-exporter.service`
+* `~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.3/usr/bin/prometheus-cluster-exporter`
+* `~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.3/etc/sysconfig/prometheus-cluster-exporter.options`
+* `~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.3/usr/lib/systemd/system/prometheus-cluster-exporter.service`
 * `~/rpmbuild/SPECS/prometheus-cluster-exporter.spec`
 
-> Do not forget to specify the proper prometheus instance in the options file.
+> Do not forget to specify the proper prometheus server in the options file.
 
 Create the tar ball:  
 
 * `cd ~/rpmbuild/SOURCES`
-* `tar -czvf prometheus-cluster-exporter-1.1.2.tar.gz prometheus-cluster-exporter-1.1.2`
+* `tar -czvf prometheus-cluster-exporter-1.1.3.tar.gz prometheus-cluster-exporter-1.1.3`
 
     Use relative paths here, otherwise rpmbuild will not find the extracted files!
 
