@@ -20,11 +20,7 @@ go build -o prometheus-cluster-exporter *.go
 
 ### Lustre Exporter
 
-A [Lustre exporter](https://github.com/GSI-HPC/lustre_exporter) that exposes the following metrics to Prometheus:
-
-* lustre\_job\_stats\_total
-* lustre\_job\_read\_bytes\_total
-* lustre\_job\_write\_bytes\_total
+[Lustre exporter](https://github.com/GSI-HPC/lustre_exporter) that exposes enabled Lustre Jobstats on the filesystem.
 
 ### Squeue Command
 
@@ -41,28 +37,14 @@ The getent command is required for the uid to user and group mapping used for th
 
 ### Parameter
 
-| Name      | Default           | Description                                                                                                                        |
-| --------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| log       | INFO              | Logging level                                                                                                                      | 
-| port      | 9846              | The port to listen on for HTTP requests                                                                                            |
-| timeout   | 15                | HTTP request timeout in seconds for exporting Lustre Jobstats on Prometheus HTTP API                                               |
-| urlReads  | Site specific URL | Query URL to the Prometheus HTTP API that exports the Lustre jobstats read throughput rate                                         |
-| urlWrites | Site specific URL | Query URL to the Prometheus HTTP API that exports the Lustre jobstats write throughput rate                                        |
-
-### Exporting Lustre Jobstats Throughput Rate
-
-The Lustre jobstats throughput rates are calculated on the Prometheus server and exported via HTTP API.  
-
-A HTTP query for setting the urlReads and urlWrites parameter consists of:
-
-* Server endpoint: `http://prom-server:9090/`
-* HTTP API endpoint: `api/v1/query`
-* Query parameter: `?query=`
-* Query string
-    * Reads: `sum%20by%28jobid%29%28irate%28lustre_job_write_bytes_total[1m]%29!=0%29`
-    * Writes: `sum%20by%28jobid%29%28irate%28lustre_job_write_bytes_total[1m]%29!=0%29`
-
-> Some special character are defined in UTF-8 hexadecimal in the query strings.
+| Name       | Default           | Description                                                                                                                        |
+| ---------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| version    | false             | Print version                                                                                                                      | 
+| promserver |                   | [REQUIRED] Prometheus Server to be used e.g. http://prometheus-server:9090                                                         |
+| log        | INFO              | Sets log level - INFO, DEBUG or TRACE                                                                                              | 
+| port       | 9846              | The port to listen on for HTTP requests                                                                                            |
+| timeout    | 15                | HTTP request timeout in seconds for exporting Lustre Jobstats on Prometheus HTTP API                                               |
+| timerange  | 1m                | Time range used for rate function on the retrieving Lustre metrics from Prometheus - A three digit number with unit s, m, h or d   |
 
 ### Running in a Productive Environment
 
@@ -71,10 +53,9 @@ since the target host should be most stable.
 
 ### Prometheus Scrape Settings
 
-Depending on the required resolution and runtimes of an exporter  
-the `scrape interval` should be set as appropriate e.g. at least 1m or higher.  
-
-The `scrape timeout` should also be set, but close to the specific scrape interval.
+Depending on the required resolution and runtime of the exporter,  
+* the `scrape interval` should be set as appropriate e.g. at least 1 minute or higher.  
+* the `scrape timeout` should be set close to the specified scrape interval.
 
 ## Metrics
 
