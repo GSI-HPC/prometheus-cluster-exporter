@@ -28,7 +28,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const getentBin = "/usr/bin/getent"
+const GETENT = "getent"
 
 type userInfo struct {
 	user string
@@ -62,11 +62,11 @@ func createUserInfoMap(channel chan<- userInfoMapResult) {
 
 	userInfoMap := make(userInfoMap)
 
-	if _, err := os.Stat(getentBin); os.IsNotExist(err) {
+	if _, err := os.Stat(GETENT); os.IsNotExist(err) {
 		log.Fatal(err)
 	}
 
-	cmd := exec.Command(getentBin, "passwd")
+	cmd := exec.Command(GETENT, "passwd")
 
 	pipe, err := cmd.StdoutPipe()
 
@@ -81,6 +81,11 @@ func createUserInfoMap(channel chan<- userInfoMapResult) {
 	}
 
 	out, err := ioutil.ReadAll(pipe)
+
+	if err != nil {
+		channel <- userInfoMapResult{0, nil, err}
+		return
+	}
 
 	// TODO Timeout handling?
 	if err := cmd.Wait(); err != nil {
@@ -135,11 +140,11 @@ func createGroupInfoMap(channel chan<- groupInfoMapResult) {
 
 	groupInfoMap := make(groupInfoMap)
 
-	if _, err := os.Stat(getentBin); os.IsNotExist(err) {
+	if _, err := os.Stat(GETENT); os.IsNotExist(err) {
 		log.Fatal(err)
 	}
 
-	cmd := exec.Command(getentBin, "group")
+	cmd := exec.Command(GETENT, "group")
 
 	pipe, err := cmd.StdoutPipe()
 
@@ -154,6 +159,11 @@ func createGroupInfoMap(channel chan<- groupInfoMapResult) {
 	}
 
 	out, err := ioutil.ReadAll(pipe)
+
+	if err != nil {
+		channel <- groupInfoMapResult{0, nil, err}
+		return
+	}
 
 	// TODO Timeout handling?
 	if err := cmd.Wait(); err != nil {
