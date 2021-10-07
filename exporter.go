@@ -272,16 +272,16 @@ func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users userInfoMap,
 
 	log.Debug("Process metadata operations")
 
-	if jobs == nil || len(jobs) == 0 {
-		return errors.New("Parameter jobs is not set")
+	if len(jobs) == 0 {
+		return errors.New("parameter jobs is not set")
 	}
 
-	if users == nil || len(users) == 0 {
-		return errors.New("Parameter users is not set")
+	if len(users) == 0 {
+		return errors.New("parameter users is not set")
 	}
 
-	if groups == nil || len(groups) == 0 {
-		return errors.New("Parameter groups is not set")
+	if len(groups) == 0 {
+		return errors.New("parameter groups is not set")
 	}
 
 	content, err := httpRequest(e.urlLustreMetadataOperations, e.requestTimeout)
@@ -375,16 +375,16 @@ func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users userInfoMa
 		procMetric = e.procWriteThroughputMetric
 	}
 
-	if jobs == nil || len(jobs) == 0 {
-		return errors.New("Parameter jobs is not set")
+	if len(jobs) == 0 {
+		return errors.New("parameter jobs is not set")
 	}
 
-	if users == nil || len(users) == 0 {
-		return errors.New("Parameter users is not set")
+	if len(users) == 0 {
+		return errors.New("parameter users is not set")
 	}
 
-	if groups == nil || len(groups) == 0 {
-		return errors.New("Parameter groups is not set")
+	if len(groups) == 0 {
+		return errors.New("parameter groups is not set")
 	}
 
 	content, err := httpRequest(url, e.requestTimeout)

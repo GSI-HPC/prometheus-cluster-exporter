@@ -78,7 +78,7 @@ func validateTimeRange(timeRange string) {
 	timeRangeUnit := timeRange[lenTimeRange-1:]
 	timeRangeNumber := timeRange[:lenTimeRange-1]
 
-	if reTimeRangeUnit.MatchString(timeRangeUnit) == false {
+	if !reTimeRangeUnit.MatchString(timeRangeUnit) {
 		log.Panic("Time range unit is not supported: ", timeRangeUnit)
 	}
 

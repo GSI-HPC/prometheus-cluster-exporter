@@ -19,13 +19,10 @@ import (
 	"bytes"
 	"errors"
 	"io/ioutil"
-	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 const GETENT = "getent"
@@ -61,10 +58,6 @@ func createUserInfoMap(channel chan<- userInfoMapResult) {
 	start := time.Now()
 
 	userInfoMap := make(userInfoMap)
-
-	if _, err := os.Stat(GETENT); os.IsNotExist(err) {
-		log.Fatal(err)
-	}
 
 	cmd := exec.Command(GETENT, "passwd")
 
@@ -139,10 +132,6 @@ func createGroupInfoMap(channel chan<- groupInfoMapResult) {
 	start := time.Now()
 
 	groupInfoMap := make(groupInfoMap)
-
-	if _, err := os.Stat(GETENT); os.IsNotExist(err) {
-		log.Fatal(err)
-	}
 
 	cmd := exec.Command(GETENT, "group")
 
