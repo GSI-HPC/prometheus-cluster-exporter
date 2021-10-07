@@ -23,31 +23,44 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
 
 const getentBin = "/usr/bin/getent"
 
-type UserInfo struct {
+type userInfo struct {
 	user string
 	uid  int
 	gid  int
 }
 
-type GroupInfo struct {
+type groupInfo struct {
 	group string
 	gid   int
 }
 
-type UserInfoMap map[int]UserInfo
+type userInfoMap map[int]userInfo
+type groupInfoMap map[int]groupInfo
 
-type GroupInfoMap map[int]GroupInfo
+type userInfoMapResult struct {
+	elapsed float64
+	users   userInfoMap
+	err     error
+}
 
-func createUserInfoMap() (UserInfoMap, error) {
+type groupInfoMapResult struct {
+	elapsed float64
+	groups  groupInfoMap
+	err     error
+}
 
-	var m UserInfoMap
-	m = make(UserInfoMap)
+func createUserInfoMap(channel chan<- userInfoMapResult) {
+
+	start := time.Now()
+
+	userInfoMap := make(userInfoMap)
 
 	if _, err := os.Stat(getentBin); os.IsNotExist(err) {
 		log.Fatal(err)
@@ -58,25 +71,29 @@ func createUserInfoMap() (UserInfoMap, error) {
 	pipe, err := cmd.StdoutPipe()
 
 	if err != nil {
-		return nil, err
+		channel <- userInfoMapResult{0, nil, err}
+		return
 	}
 
 	if err := cmd.Start(); err != nil {
-		return nil, err
+		channel <- userInfoMapResult{0, nil, err}
+		return
 	}
 
 	out, err := ioutil.ReadAll(pipe)
 
 	// TODO Timeout handling?
 	if err := cmd.Wait(); err != nil {
-		return nil, err
+		channel <- userInfoMapResult{0, nil, err}
+		return
 	}
 
 	// TrimSpace on []bytes is more efficient than calling TrimSpace on a string since it creates a copy
 	content := string(bytes.TrimSpace(out))
 
 	if len(content) == 0 {
-		return nil, errors.New("Retrieved content in createUserInfoMap() is empty")
+		channel <- userInfoMapResult{0, nil, errors.New("retrieved content in createUserInfoMap() is empty")}
+		return
 	}
 
 	lines := strings.Split(content, "\n")
@@ -86,31 +103,37 @@ func createUserInfoMap() (UserInfoMap, error) {
 		fields := strings.SplitN(line, ":", 5)
 
 		if len(fields) < 4 {
-			return nil, errors.New("Insufficient field count found in line: " + line)
+			channel <- userInfoMapResult{0, nil, errors.New("insufficient field count found in line: " + line)}
+			return
 		}
 
 		user := fields[0]
 
 		uid, err := strconv.Atoi(fields[2])
 		if err != nil {
-			return nil, err
+			channel <- userInfoMapResult{0, nil, err}
+			return
 		}
 
 		gid, err := strconv.Atoi(fields[3])
 		if err != nil {
-			return nil, err
+			channel <- userInfoMapResult{0, nil, err}
+			return
 		}
 
-		m[uid] = UserInfo{user, uid, gid}
+		userInfoMap[uid] = userInfo{user, uid, gid}
 	}
 
-	return m, nil
+	elapsed := time.Since(start).Seconds()
+
+	channel <- userInfoMapResult{elapsed, userInfoMap, nil}
 }
 
-func createGroupInfoMap() (GroupInfoMap, error) {
+func createGroupInfoMap(channel chan<- groupInfoMapResult) {
 
-	var m GroupInfoMap
-	m = make(GroupInfoMap)
+	start := time.Now()
+
+	groupInfoMap := make(groupInfoMap)
 
 	if _, err := os.Stat(getentBin); os.IsNotExist(err) {
 		log.Fatal(err)
@@ -121,25 +144,29 @@ func createGroupInfoMap() (GroupInfoMap, error) {
 	pipe, err := cmd.StdoutPipe()
 
 	if err != nil {
-		return nil, err
+		channel <- groupInfoMapResult{0, nil, err}
+		return
 	}
 
 	if err := cmd.Start(); err != nil {
-		return nil, err
+		channel <- groupInfoMapResult{0, nil, err}
+		return
 	}
 
 	out, err := ioutil.ReadAll(pipe)
 
 	// TODO Timeout handling?
 	if err := cmd.Wait(); err != nil {
-		return nil, err
+		channel <- groupInfoMapResult{0, nil, err}
+		return
 	}
 
 	// TrimSpace on []bytes is more efficient than calling TrimSpace on a string since it creates a copy
 	content := string(bytes.TrimSpace(out))
 
 	if len(content) == 0 {
-		return nil, errors.New("Retrieved content in createGroupInfoMap() is empty")
+		channel <- groupInfoMapResult{0, nil, errors.New("retrieved content in createGroupInfoMap() is empty")}
+		return
 	}
 
 	lines := strings.Split(content, "\n")
@@ -148,18 +175,22 @@ func createGroupInfoMap() (GroupInfoMap, error) {
 		fields := strings.SplitN(line, ":", 4)
 
 		if len(fields) < 3 {
-			return nil, errors.New("Insufficient field count found in line: " + line)
+			channel <- groupInfoMapResult{0, nil, errors.New("insufficient field count found in line: " + line)}
+			return
 		}
 
 		group := fields[0]
 
 		gid, err := strconv.Atoi(fields[2])
 		if err != nil {
-			return nil, err
+			channel <- groupInfoMapResult{0, nil, err}
+			return
 		}
 
-		m[gid] = GroupInfo{group, gid}
+		groupInfoMap[gid] = groupInfo{group, gid}
 	}
 
-	return m, nil
+	elapsed := time.Since(start).Seconds()
+
+	channel <- groupInfoMapResult{elapsed, groupInfoMap, nil}
 }

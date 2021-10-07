@@ -1,4 +1,4 @@
-// Copyright 2020 Gabriele Iannetti <g.iannetti@gsi.de>
+// Copyright 2021 Gabriele Iannetti <g.iannetti@gsi.de>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ import (
 	"log"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 type jobInfo struct {
@@ -29,9 +30,17 @@ type jobInfo struct {
 	user    string
 }
 
+type runningJobsResult struct {
+	elapsed float64
+	jobs    []jobInfo
+	err     error
+}
+
 const SQUEUE = "squeue"
 
-func retrieveRunningJobs() ([]jobInfo, error) {
+func retrieveRunningJobs(channel chan<- runningJobsResult) {
+
+	start := time.Now()
 
 	_, err := exec.LookPath(SQUEUE)
 	if err != nil {
@@ -42,23 +51,27 @@ func retrieveRunningJobs() ([]jobInfo, error) {
 
 	pipe, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, err
+		channel <- runningJobsResult{0, nil, err}
+		return
 	}
 
 	err = cmd.Start()
 	if err != nil {
-		return nil, err
+		channel <- runningJobsResult{0, nil, err}
+		return
 	}
 
 	out, err := ioutil.ReadAll(pipe)
 	if err != nil {
-		return nil, err
+		channel <- runningJobsResult{0, nil, err}
+		return
 	}
 
 	// TODO Timeout handling?
 	err = cmd.Wait()
 	if err != nil {
-		return nil, err
+		channel <- runningJobsResult{0, nil, err}
+		return
 	}
 
 	// TrimSpace on []bytes is more efficient than calling TrimSpace on a string since it creates a copy
@@ -73,5 +86,7 @@ func retrieveRunningJobs() ([]jobInfo, error) {
 		jobs[i] = jobInfo{fields[0], fields[1], fields[2]}
 	}
 
-	return jobs, nil
+	elapsed := time.Since(start).Seconds()
+
+	channel <- runningJobsResult{elapsed, jobs, nil}
 }

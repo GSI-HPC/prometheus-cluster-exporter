@@ -28,6 +28,9 @@ import (
 )
 
 type exporter struct {
+	channelRunningJobs           chan runningJobsResult
+	channelUserInfo              chan userInfoMapResult
+	channelGroupInfo             chan groupInfoMapResult
 	scrapeActive                 bool
 	scrapeMutex                  sync.Mutex
 	requestTimeout               int
@@ -66,6 +69,10 @@ func newGaugeVecMetric(namespace string, metricName string, docString string, co
 }
 
 func newExporter(requestTimeout int, urlLustreMetadataOperations string, urlLustreJobReadBytes string, urlLustreJobWriteBytes string) *exporter {
+
+	channelRunningJobs := make(chan runningJobsResult)
+	channelUserInfo := make(chan userInfoMapResult)
+	channelGroupInfo := make(chan groupInfoMapResult)
 
 	if requestTimeout <= 0 {
 		log.Fatal("Request timeout must be greater then 0")
@@ -120,6 +127,9 @@ func newExporter(requestTimeout int, urlLustreMetadataOperations string, urlLust
 		[]string{"proc_name", "group_name", "user_name"})
 
 	return &exporter{
+		channelRunningJobs:           channelRunningJobs,
+		channelUserInfo:              channelUserInfo,
+		channelGroupInfo:             channelGroupInfo,
 		requestTimeout:               requestTimeout,
 		urlLustreMetadataOperations:  urlLustreMetadataOperations,
 		urlLustreJobReadBytes:        urlLustreJobReadBytes,
@@ -138,6 +148,7 @@ func newExporter(requestTimeout int, urlLustreMetadataOperations string, urlLust
 func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 
 	scrapeOK := true
+	var err error
 
 	e.scrapeMutex.Lock() // Do mutex unlock ASAP
 
@@ -162,38 +173,34 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 		e.procReadThroughputMetric.Reset()
 		e.procWriteThroughputMetric.Reset()
 
-		start = time.Now()
-		runningJobs, err := retrieveRunningJobs()
-		elapsed = time.Since(start).Seconds()
-		e.stageExecutionMetric.WithLabelValues("retrieve_running_jobs").Set(elapsed)
+		go retrieveRunningJobs(e.channelRunningJobs)
+		go createUserInfoMap(e.channelUserInfo)
+		go createGroupInfoMap(e.channelGroupInfo)
 
-		if err != nil {
+		runningJobsResult := <-e.channelRunningJobs
+		userInfoResult := <-e.channelUserInfo
+		groupInfoResult := <-e.channelGroupInfo
+
+		if runningJobsResult.err != nil {
 			scrapeOK = false
-			log.Errorln(err)
+			log.Errorln(runningJobsResult.err)
+		}
+		if userInfoResult.err != nil {
+			scrapeOK = false
+			log.Errorln(userInfoResult.err)
+		}
+		if groupInfoResult.err != nil {
+			scrapeOK = false
+			log.Errorln(groupInfoResult.err)
 		}
 
-		start = time.Now()
-		users, err := createUserInfoMap()
-		elapsed = time.Since(start).Seconds()
-		e.stageExecutionMetric.WithLabelValues("retrieve_user_name_info").Set(elapsed)
-
-		if err != nil {
-			scrapeOK = false
-			log.Errorln(err)
-		}
+		e.stageExecutionMetric.WithLabelValues("retrieve_running_jobs").Set(runningJobsResult.elapsed)
+		e.stageExecutionMetric.WithLabelValues("retrieve_user_name_info").Set(userInfoResult.elapsed)
+		e.stageExecutionMetric.WithLabelValues("retrieve_group_name_info").Set(groupInfoResult.elapsed)
 
 		start = time.Now()
-		groups, err := createGroupInfoMap()
-		elapsed = time.Since(start).Seconds()
-		e.stageExecutionMetric.WithLabelValues("retrieve_group_name_info").Set(elapsed)
+		err = e.buildLustreMetadataMetrics(runningJobsResult.jobs, userInfoResult.users, groupInfoResult.groups)
 
-		if err != nil {
-			scrapeOK = false
-			log.Errorln(err)
-		}
-
-		start = time.Now()
-		err = e.buildLustreMetadataMetrics(runningJobs, users, groups)
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_metadata_metrics").Set(elapsed)
 
@@ -205,7 +212,7 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 		}
 
 		start = time.Now()
-		err = e.buildLustreThroughputMetrics(runningJobs, users, groups, true)
+		err = e.buildLustreThroughputMetrics(runningJobsResult.jobs, userInfoResult.users, groupInfoResult.groups, true)
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_read_throughput_metrics").Set(elapsed)
 
@@ -217,7 +224,7 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 		}
 
 		start = time.Now()
-		err = e.buildLustreThroughputMetrics(runningJobs, users, groups, false)
+		err = e.buildLustreThroughputMetrics(runningJobsResult.jobs, userInfoResult.users, groupInfoResult.groups, false)
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_write_throughput_metrics").Set(elapsed)
 
@@ -261,7 +268,7 @@ func (e *exporter) Describe(ch chan<- *prometheus.Desc) {
 	e.procWriteThroughputMetric.Describe(ch)
 }
 
-func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users UserInfoMap, groups GroupInfoMap) error {
+func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users userInfoMap, groups groupInfoMap) error {
 
 	log.Debug("Process metadata operations")
 
@@ -350,7 +357,7 @@ func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users UserInfoMap,
 	return nil
 }
 
-func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users UserInfoMap, groups GroupInfoMap, read bool) error {
+func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users userInfoMap, groups groupInfoMap, read bool) error {
 
 	var url string
 	var jobMetric *prometheus.GaugeVec
