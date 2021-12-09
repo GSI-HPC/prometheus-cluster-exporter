@@ -310,12 +310,12 @@ func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users userInfoMap,
 				}
 			}
 
-		} else { // Process with UID (proc_name.uid)
+		} else { // Should look like process name with UID (proc_name.uid)
 
 			fields := strings.Split(metadataInfo.jobid, ".")
 			lenFields := len(fields)
 
-			var procName, userName, groupName string
+			var procName string
 			var uid int
 
 			if lenFields == 2 {
@@ -334,7 +334,8 @@ func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users userInfoMap,
 					return err
 				}
 			} else {
-				return errors.New("To few Lustre Jobstats procname_uid fields: " + metadataInfo.jobid)
+				log.Warning("Insufficient Lustre Jobstats procname_uid fields found in jobid: " + metadataInfo.jobid)
+				continue
 			}
 
 			userInfo, ok := users[uid]
@@ -347,9 +348,7 @@ func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users userInfoMap,
 				return errors.New("gid not found in groups map: " + strconv.Itoa(userInfo.gid))
 			}
 
-			userName = userInfo.user
-			groupName = groupInfo.group
-			e.procMetadataOperationsMetric.WithLabelValues(procName, groupName, userName).Add(
+			e.procMetadataOperationsMetric.WithLabelValues(procName, groupInfo.group, userInfo.user).Add(
 				float64(metadataInfo.operations))
 		}
 	}
@@ -412,12 +411,12 @@ func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users userInfoMa
 				}
 			}
 
-		} else { // Process with UID (proc_name.uid)
+		} else { // Should look like process name with UID (proc_name.uid)
 
 			fields := strings.Split(thInfo.jobid, ".")
 			lenFields := len(fields)
 
-			var procName, userName, groupName string
+			var procName string
 			var uid int
 
 			if lenFields == 2 {
@@ -436,7 +435,8 @@ func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users userInfoMa
 					return err
 				}
 			} else {
-				return errors.New("To few Lustre Jobstats procname_uid fields: " + thInfo.jobid)
+				log.Warning("Insufficient Lustre Jobstats procname_uid fields found in jobid: " + thInfo.jobid)
+				continue
 			}
 
 			userInfo, ok := users[uid]
@@ -449,9 +449,7 @@ func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users userInfoMa
 				return errors.New("gid not found in groups map: " + strconv.Itoa(userInfo.gid))
 			}
 
-			userName = userInfo.user
-			groupName = groupInfo.group
-			procMetric.WithLabelValues(procName, groupName, userName).Add(thInfo.throughput)
+			procMetric.WithLabelValues(procName, groupInfo.group, userInfo.user).Add(thInfo.throughput)
 		}
 	}
 
