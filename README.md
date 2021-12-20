@@ -76,8 +76,8 @@ Metadata operations are exposed per target, since it has been shown that it is a
 
 #### **Jobs**
 
-| Metric                     | Labels               | Description                                                              |
-| ---------------------------| -------------------- | ------------------------------------------------------------------------ |
+| Metric                     | Labels                | Description                                                             |
+| ---------------------------| --------------------- | ----------------------------------------------------------------------- |
 | job\_metadata\_operations  | account, user, target | Total metadata operations of all jobs per account and user on a target. |
 
 #### **Process Names**
