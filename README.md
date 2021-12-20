@@ -40,7 +40,7 @@ The getent command is required for the uid to user and group mapping used for th
 | Name       | Default           | Description                                                                                                                        |
 | ---------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | version    | false             | Print version                                                                                                                      | 
-| promserver |                   | [REQUIRED] Prometheus Server to be used e.g. http://prometheus-server:9090                                                         |
+| promserver | \-                | [REQUIRED] Prometheus Server to be used e.g. http://prometheus-server:9090                                                         |
 | log        | INFO              | Sets log level - INFO, DEBUG or TRACE                                                                                              | 
 | port       | 9846              | The port to listen on for HTTP requests                                                                                            |
 | timeout    | 15                | HTTP request timeout in seconds for exporting Lustre Jobstats on Prometheus HTTP API                                               |
@@ -72,17 +72,19 @@ These metrics are always exported.
 
 ### Metadata
 
+Metadata operations are exposed per target, since it has been shown that it is a very helpful information to have.
+
 #### **Jobs**
 
-| Metric                     | Labels        | Description                                                 |
-| ---------------------------| ------------- | ----------------------------------------------------------- |
-| job\_metadata\_operations  | account, user | Total metadata operations of all jobs per account and user. |
+| Metric                     | Labels               | Description                                                              |
+| ---------------------------| -------------------- | ------------------------------------------------------------------------ |
+| job\_metadata\_operations  | account, user, target | Total metadata operations of all jobs per account and user on a target. |
 
 #### **Process Names**
 
-| Metric                     | Labels                              | Description                                                     |
-| -------------------------- | ----------------------------------- | --------------------------------------------------------------- |
-| proc\_metadata\_operations | proc\_name, group\_name, user\_name | Total metadata operations of process names per group and user.  |
+| Metric                     | Labels                                      | Description                                                                |
+| -------------------------- | ------------------------------------------- | -------------------------------------------------------------------------- |
+| proc\_metadata\_operations | proc\_name, group\_name, user\_name, target | Total metadata operations of process names per group and user on a target. |
 
 
 ### Throughput
