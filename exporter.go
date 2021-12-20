@@ -49,6 +49,7 @@ type exporter struct {
 
 type metadataInfo struct {
 	jobid      string
+	target     string
 	operations int64
 }
 
@@ -93,8 +94,8 @@ func newExporter(requestTimeout int, urlLustreMetadataOperations string, urlLust
 	jobMetadataOperationsMetric := newGaugeVecMetric(
 		namespace,
 		"job_metadata_operations",
-		"Total metadata operations of all jobs per account and user.",
-		[]string{"account", "user"})
+		"Total metadata operations of all jobs per account and user on a target.",
+		[]string{"account", "user", "target"})
 
 	jobReadThroughputMetric := newGaugeVecMetric(
 		namespace,
@@ -111,8 +112,8 @@ func newExporter(requestTimeout int, urlLustreMetadataOperations string, urlLust
 	procMetadataOperationsMetric := newGaugeVecMetric(
 		namespace,
 		"proc_metadata_operations",
-		"Total metadata operations of process names per group and user.",
-		[]string{"proc_name", "group_name", "user_name"})
+		"Total metadata operations of process names per group and user on a target.",
+		[]string{"proc_name", "group_name", "user_name", "target"})
 
 	procReadThroughputMetric := newGaugeVecMetric(
 		namespace,
@@ -305,7 +306,7 @@ func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users userInfoMap,
 
 			for _, job := range jobs {
 				if metadataInfo.jobid == job.jobid {
-					e.jobMetadataOperationsMetric.WithLabelValues(job.account, job.user).Add(
+					e.jobMetadataOperationsMetric.WithLabelValues(job.account, job.user, metadataInfo.target).Add(
 						float64(metadataInfo.operations))
 				}
 			}
@@ -348,8 +349,8 @@ func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users userInfoMap,
 				return errors.New("gid not found in groups map: " + strconv.Itoa(userInfo.gid))
 			}
 
-			e.procMetadataOperationsMetric.WithLabelValues(procName, groupInfo.group, userInfo.user).Add(
-				float64(metadataInfo.operations))
+			e.procMetadataOperationsMetric.WithLabelValues(
+				procName, groupInfo.group, userInfo.user, metadataInfo.target).Add(float64(metadataInfo.operations))
 		}
 	}
 
@@ -473,23 +474,30 @@ func parseLustreMetadataOperations(content *[]byte) *[]metadataInfo {
 
 	jsonparser.ArrayEach(*content, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 
-		jobid, err := jsonparser.GetString(value, "metric", "jobid")
+		var jobid string
+		var target string
+		var operations int64
+
+		jobid, err = jsonparser.GetString(value, "metric", "jobid")
 
 		if err != nil {
 			// Might be the case with the exported Lustre jobstats. Cause not clear, need to check Lustre exporter.
 			log.Warning("Key jobid not found in metric value:", string(value))
 		} else {
+			// TODO: Should be possible to avoid calling GetString multiple times?
 			operationsStr, err := jsonparser.GetString(value, "value", "[1]")
 			if err != nil {
 				log.Panic(err)
 			}
-
-			operations, err := strconv.ParseInt(operationsStr, 10, 64)
+			operations, err = strconv.ParseInt(operationsStr, 10, 64)
 			if err != nil {
 				log.Panic(err)
 			}
-
-			slice = append(slice, metadataInfo{jobid, operations})
+			target, err = jsonparser.GetString(value, "metric", "target")
+			if err != nil {
+				log.Panic("Key target not found in metric value:", string(value))
+			}
+			slice = append(slice, metadataInfo{jobid, target, operations})
 		}
 
 	}, "data", "result")

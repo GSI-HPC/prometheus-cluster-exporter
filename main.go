@@ -35,7 +35,7 @@ const (
 	namespaceInternals      = "cluster_exporter"
 	httpApi                 = "/api/v1/query"
 	queryParameter          = "?query=" // Query parameter are encoded in hex with % and 2 digits in the URL.
-	queryMetadataOperations = "round%28sum%20by%28jobid%29%28irate%28lustre_job_stats_total[__TIME_RANGE__]%29%3E=1%29%29"
+	queryMetadataOperations = "round%28sum%20by%28target%2Cjobid%29%28irate%28lustre_job_stats_total[__TIME_RANGE__]%29%3E=1%29%29"
 	queryJobReadBytes       = "sum%20by%28jobid%29%28irate%28lustre_job_read_bytes_total[__TIME_RANGE__]%29!=0%29"
 	queryJobWriteBytes      = "sum%20by%28jobid%29%28irate%28lustre_job_write_bytes_total[__TIME_RANGE__]%29!=0%29"
 	defaultLogLevel         = "INFO"
