@@ -3,7 +3,7 @@
 %define        __os_install_post %{_dbpath}/brp-compress
 
 Name:           prometheus-cluster-exporter
-Version:        1.1.5
+Version:        1.1.6
 Release:        1%{?dist}
 Summary:        Prometheus exporter for Lustre IO throughput metrics associated to SLURM accounts and processes on a cluster.
 Group:          Monitoring
