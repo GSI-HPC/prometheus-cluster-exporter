@@ -17,6 +17,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net/http"
 	"os"
 	"regexp"
@@ -118,18 +119,18 @@ func main() {
 	initLogging(*logLevel)
 
 	if *printVersion {
-		log.Info("Version: ", version)
+		fmt.Println("Version:", version)
 		os.Exit(0)
 	}
 
 	if *promServer == "" {
-		log.Panic("No Prometheus server has been specified")
+		log.Fatal("No Prometheus server has been specified")
 	}
 
 	metricsPath := "/metrics"
 	listenAddress := ":" + *port
 
-	log.Info("Exporter started")
+	log.Debug("Exporter started")
 
 	urlExports := newUrlExportLustreMetrics(*promServer, *timeRange)
 
@@ -152,5 +153,5 @@ func main() {
 		log.Error(err)
 	}
 
-	log.Info("Exporter finished")
+	log.Debug("Exporter finished")
 }
