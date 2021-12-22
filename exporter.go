@@ -17,6 +17,7 @@ package main
 
 import (
 	"errors"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -26,6 +27,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
+
+var regexMetadataMDT *regexp.Regexp = regexp.MustCompile(`^.*-MDT[[:xdigit:]]{4}$`)
 
 type exporter struct {
 	channelRunningJobs           chan runningJobsResult
@@ -71,12 +74,8 @@ func newGaugeVecMetric(namespace string, metricName string, docString string, co
 
 func newExporter(requestTimeout int, urlLustreMetadataOperations string, urlLustreJobReadBytes string, urlLustreJobWriteBytes string) *exporter {
 
-	channelRunningJobs := make(chan runningJobsResult)
-	channelUserInfo := make(chan userInfoMapResult)
-	channelGroupInfo := make(chan groupInfoMapResult)
-
 	if requestTimeout <= 0 {
-		log.Fatal("Request timeout must be greater then 0")
+		log.Panic("Request timeout must be greater then 0")
 	}
 
 	scrapeOKMetric := prometheus.NewGauge(prometheus.GaugeOpts{
@@ -128,9 +127,9 @@ func newExporter(requestTimeout int, urlLustreMetadataOperations string, urlLust
 		[]string{"proc_name", "group_name", "user_name"})
 
 	return &exporter{
-		channelRunningJobs:           channelRunningJobs,
-		channelUserInfo:              channelUserInfo,
-		channelGroupInfo:             channelGroupInfo,
+		channelRunningJobs:           make(chan runningJobsResult),
+		channelUserInfo:              make(chan userInfoMapResult),
+		channelGroupInfo:             make(chan groupInfoMapResult),
 		requestTimeout:               requestTimeout,
 		urlLustreMetadataOperations:  urlLustreMetadataOperations,
 		urlLustreJobReadBytes:        urlLustreJobReadBytes,
@@ -155,7 +154,7 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 
 	if e.scrapeActive {
 		scrapeOK = false
-		log.Warning("Collect is still active... - Skipping now")
+		log.Debug("Collect is still active... - Skipping now")
 		e.scrapeMutex.Unlock()
 	} else {
 		log.Debug("Collect started")
@@ -335,7 +334,7 @@ func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users userInfoMap,
 					return err
 				}
 			} else {
-				log.Warning("Insufficient Lustre Jobstats procname_uid fields found in jobid: " + metadataInfo.jobid)
+				log.Debug("Insufficient Lustre Jobstats procname_uid fields found in jobid:", metadataInfo.jobid)
 				continue
 			}
 
@@ -436,7 +435,7 @@ func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users userInfoMa
 					return err
 				}
 			} else {
-				log.Warning("Insufficient Lustre Jobstats procname_uid fields found in jobid: " + thInfo.jobid)
+				log.Warning("Insufficient Lustre Jobstats procname_uid fields found in jobid: ", thInfo.jobid)
 				continue
 			}
 
@@ -481,24 +480,48 @@ func parseLustreMetadataOperations(content *[]byte) *[]metadataInfo {
 		jobid, err = jsonparser.GetString(value, "metric", "jobid")
 
 		if err != nil {
-			// Might be the case with the exported Lustre jobstats. Cause not clear, need to check Lustre exporter.
-			log.Warning("Key jobid not found in metric value:", string(value))
+			log.Error("Key jobid not found in value: ", string(value))
+		} else if jobid == "" {
+			log.Error("Jobid is empty in value: ", string(value))
 		} else {
+
 			// TODO: Should be possible to avoid calling GetString multiple times?
 			operationsStr, err := jsonparser.GetString(value, "value", "[1]")
 			if err != nil {
-				log.Panic(err)
+				log.Error(err)
+				goto Continue
 			}
+
 			operations, err = strconv.ParseInt(operationsStr, 10, 64)
 			if err != nil {
-				log.Panic(err)
+				log.Error(err)
+				goto Continue
 			}
+
 			target, err = jsonparser.GetString(value, "metric", "target")
 			if err != nil {
-				log.Panic("Key target not found in metric value:", string(value))
+				log.Error("Key target not found in value:", string(value))
+				goto Continue
 			}
+
+			if target == "" {
+				log.Error("Target is empty in value:", string(value))
+				goto Continue
+			}
+
+			if !regexMetadataMDT.MatchString(target) {
+				if log.IsLevelEnabled(log.DebugLevel) {
+					log.Debug("Skipped metadata operation for non MDT target: ", string(value))
+				}
+				goto Continue
+			}
+
 			slice = append(slice, metadataInfo{jobid, target, operations})
+
 		}
+
+	Continue:
+		// End of jsonparser.ArrayEach
 
 	}, "data", "result")
 
@@ -525,20 +548,26 @@ func parseLustreTotalBytes(content *[]byte) *[]throughputInfo {
 		jobid, err := jsonparser.GetString(value, "metric", "jobid")
 
 		if err != nil {
-			// Might be the case with the exported Lustre jobstats. Cause not clear, need to check Lustre exporter.
-			log.Warning("Key jobid not found in metric value:", string(value))
+			log.Error("Key jobid not found in value: ", string(value))
 		} else {
+
 			throughputStr, err := jsonparser.GetString(value, "value", "[1]")
 			if err != nil {
-				log.Panic(err)
+				log.Error(err)
+				goto Continue
 			}
 
 			throughput, err := strconv.ParseFloat(throughputStr, 64)
 			if err != nil {
-				log.Panic(err)
+				log.Error(err)
+				goto Continue
 			}
+
 			slice = append(slice, throughputInfo{jobid, throughput})
 		}
+
+	Continue:
+		// End of jsonparser.ArrayEach
 
 	}, "data", "result")
 

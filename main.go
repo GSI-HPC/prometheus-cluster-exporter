@@ -38,7 +38,7 @@ const (
 	queryMetadataOperations = "round%28sum%20by%28target%2Cjobid%29%28irate%28lustre_job_stats_total[__TIME_RANGE__]%29%3E=1%29%29"
 	queryJobReadBytes       = "sum%20by%28jobid%29%28irate%28lustre_job_read_bytes_total[__TIME_RANGE__]%29!=0%29"
 	queryJobWriteBytes      = "sum%20by%28jobid%29%28irate%28lustre_job_write_bytes_total[__TIME_RANGE__]%29!=0%29"
-	defaultLogLevel         = "INFO"
+	defaultLogLevel         = "ERROR"
 	defaultPort             = "9846"
 	defaultRequestTimeout   = 15
 	defaultTimeRange        = "1m"
@@ -52,7 +52,9 @@ type urlExportLustreMetrics struct {
 
 func initLogging(logLevel string) {
 
-	if logLevel == "INFO" {
+	if logLevel == "ERROR" {
+		log.SetLevel(log.ErrorLevel)
+	} else if logLevel == "INFO" {
 		log.SetLevel(log.InfoLevel)
 	} else if logLevel == "DEBUG" {
 		log.SetLevel(log.DebugLevel)

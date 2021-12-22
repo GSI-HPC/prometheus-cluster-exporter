@@ -10,7 +10,7 @@ func TestParseLustreMetadataOperations(t *testing.T) {
 	var lustreMetadataOperations *[]metadataInfo = parseLustreMetadataOperations(&content)
 
 	var got_count int = len(*lustreMetadataOperations)
-	var expected_count int = 41
+	var expected_count int = 40
 
 	if expected_count != got_count {
 		t.Errorf("Expected count of metadata operations: %d - got: %d", expected_count, got_count)
