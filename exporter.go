@@ -75,7 +75,7 @@ func newGaugeVecMetric(namespace string, metricName string, docString string, co
 func newExporter(requestTimeout int, urlLustreMetadataOperations string, urlLustreJobReadBytes string, urlLustreJobWriteBytes string) *exporter {
 
 	if requestTimeout <= 0 {
-		log.Panic("Request timeout must be greater then 0")
+		log.Fatal("Request timeout must be greater then 0")
 	}
 
 	scrapeOKMetric := prometheus.NewGauge(prometheus.GaugeOpts{

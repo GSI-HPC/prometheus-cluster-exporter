@@ -62,7 +62,7 @@ func initLogging(logLevel string) {
 	} else if logLevel == "TRACE" {
 		log.SetLevel(log.TraceLevel)
 	} else {
-		log.Panicln("Not supported log level set")
+		log.Fatal("Not supported log level set")
 	}
 
 	log.SetOutput(os.Stdout)
@@ -73,7 +73,7 @@ func validateTimeRange(timeRange string) {
 	lenTimeRange := len(timeRange)
 
 	if lenTimeRange < 2 || lenTimeRange > 4 {
-		log.Panic("Time range length is not supported: ", timeRange)
+		log.Fatal("Time range length is not supported: ", timeRange)
 	}
 
 	reTimeRangeUnit := regexp.MustCompile("s|m|h|d")
@@ -82,13 +82,13 @@ func validateTimeRange(timeRange string) {
 	timeRangeNumber := timeRange[:lenTimeRange-1]
 
 	if !reTimeRangeUnit.MatchString(timeRangeUnit) {
-		log.Panic("Time range unit is not supported: ", timeRangeUnit)
+		log.Fatal("Time range unit is not supported: ", timeRangeUnit)
 	}
 
 	_, err := strconv.Atoi(timeRangeNumber)
 
 	if err != nil {
-		log.Panic("Time range number could not be coverted to an integer: ", timeRangeNumber)
+		log.Fatal("Time range number could not be coverted to an integer: ", timeRangeNumber)
 	}
 }
 
