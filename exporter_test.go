@@ -1,16 +1,36 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestParseLustreMetadataOperations(t *testing.T) {
 
-	var data string = `{"status":"success","data":{"resultType":"vector","result":[{"metric":{"jobid":"35044931","target":"hebe-MDT0002"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"35070653","target":"hebe-MDT0000"},"value":[1639743019.545,"43"]},{"metric":{"jobid":"35189820","target":"hebe-MDT0000"},"value":[1639743019.545,"4"]},{"metric":{"jobid":"35166602","target":"hebe-MDT0001"},"value":[1639743019.545,"31"]},{"metric":{"jobid":"35189845","target":"hebe-MDT0001"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"35048662","target":"hebe-MDT0001"},"value":[1639743019.545,"27"]},{"metric":{"jobid":"35097923","target":"hebe-MDT0002"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"35156251","target":"hebe-MDT0002"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"35178783","target":"hebe-MDT0002"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"35170040","target":"hebe-MDT0002"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"touch.6812","target":"hebe-MDT0002"},"value":[1639743019.545,"3"]},{"metric":{"jobid":"xrootd.6812","target":"hebe-MDT0002"},"value":[1639743019.545,"13"]},{"metric":{"jobid":"rsync.9334","target":"hebe-MDT0000"},"value":[1639743019.545,"15"]},{"metric":{"jobid":"34842227","target":"hebe-MDT0001"},"value":[1639743019.545,"6"]},{"metric":{"jobid":"35048664","target":"hebe-MDT0001"},"value":[1639743019.545,"28"]},{"metric":{"jobid":"35178762","target":"hebe-MDT0001"},"value":[1639743019.545,"12"]},{"metric":{"jobid":"35166599","target":"hebe-MDT0001"},"value":[1639743019.545,"72"]},{"metric":{"jobid":"35166603","target":"hebe-MDT0001"},"value":[1639743019.545,"109"]},{"metric":{"jobid":"35168120","target":"hebe-MDT0002"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"35186134","target":"hebe-MDT0002"},"value":[1639743019.545,"2"]},{"metric":{"jobid":"35129848","target":"hebe-MDT0002"},"value":[1639743019.545,"2"]},{"metric":{"jobid":"touch.6812","target":"hebe-OST020c"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"35070627","target":"hebe-MDT0000"},"value":[1639743019.545,"101"]},{"metric":{"jobid":"35189850","target":"hebe-MDT0000"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"slurmstepd.10388","target":"hebe-MDT0000"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"ll_sa_11831.0","target":"hebe-MDT0001"},"value":[1639743019.545,"185"]},{"metric":{"jobid":"35156968","target":"hebe-MDT0000"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"35188793","target":"hebe-MDT0000"},"value":[1639743019.545,"2"]},{"metric":{"jobid":"35189309","target":"hebe-MDT0002"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"35185982","target":"hebe-MDT0002"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"Reloader.7377","target":"hebe-MDT0000"},"value":[1639743019.545,"2"]},{"metric":{"jobid":"sftp-server.5524","target":"hebe-MDT0001"},"value":[1639743019.545,"734"]},{"metric":{"jobid":"35039426","target":"hebe-MDT0002"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"35154964","target":"hebe-MDT0002"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"35177818","target":"hebe-MDT0001"},"value":[1639743019.545,"15"]},{"metric":{"jobid":"35032996","target":"hebe-MDT0002"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"35112154","target":"hebe-MDT0002"},"value":[1639743019.545,"2"]},{"metric":{"jobid":"35188756","target":"hebe-MDT0000"},"value":[1639743019.545,"1"]},{"metric":{"jobid":"35048628","target":"hebe-MDT0001"},"value":[1639743019.545,"83"]},{"metric":{"jobid":"35051717","target":"hebe-MDT0001"},"value":[1639743019.545,"13"]},{"metric":{"jobid":"35056989","target":"hebe-MDT0001"},"value":[1639743019.545,"5"]}]}}`
+	var data string = `{"status":"success","data":{"resultType":"vector","result":[
+		{"metric":{"jobid":"35044931","target":"hebe-MDT0002"},"value":[1639743019.545,"1"]},
+		{"metric":{"jobid":"35070653","target":"hebe-MDT0000"},"value":[1639743019.545,"43"]},
+		{"metric":{"jobid":"35189820","target":"hebe-MDT0000"},"value":[1639743019.545,"4"]},
+		{"metric":{"jobid":"35166602","target":"hebe-MDT0001"},"value":[1639743019.545,"31"]},
+		{"metric":{"jobid":"35189845","target":"hebe-MDT0001"},"value":[1639743019.545,"1"]},
+		{"metric":{"jobid":"35048662","target":"hebe-MDT0001"},"value":[1639743019.545,"27"]},
+		{"metric":{"jobid":"cp.5689","target":"hebe-MDT0002"},"value":[1639743019.545,"1"]},
+		{"metric":{"jobid":"35056989","target":"hebe-OST022d"},"value":[1639743019.545,"5"]},
+		{"metric":{"jobid":"touch.6812","target":"hebe-OST020c"},"value":[1639743019.545,"1"]}
+		]}}`
+
 	var content []byte = []byte(data)
 
-	var lustreMetadataOperations *[]metadataInfo = parseLustreMetadataOperations(&content)
+	var lustreMetadataOperations *[]metadataInfo
+	var err error
+
+	lustreMetadataOperations, err = parseLustreMetadataOperations(&content)
+
+	if err != nil {
+		t.Error(err)
+	}
 
 	var got_count int = len(*lustreMetadataOperations)
-	var expected_count int = 40
+	var expected_count int = 7
 
 	if expected_count != got_count {
 		t.Errorf("Expected count of metadata operations: %d - got: %d", expected_count, got_count)
@@ -26,5 +46,51 @@ func TestParseLustreMetadataOperations(t *testing.T) {
 
 	if metadataInfo.target != expected_target {
 		t.Errorf("Expected target: %s - got: %s", expected_target, metadataInfo.target)
+	}
+
+	for _, metadataInfo := range *lustreMetadataOperations {
+		if !regexMetadataMDT.MatchString(metadataInfo.target) {
+			t.Error("Only MDT as target is allowed:", metadataInfo.target)
+		}
+	}
+
+}
+
+func TestParseLustreTotalBytes(t *testing.T) {
+
+	var data string = `{"status":"success","data":{"resultType":"vector","result":[
+		{"metric":{"jobid":"35652133"},"value":[1640181380.814,"319215.8800539506"]},
+		{"metric":{"jobid":"35239994"},"value":[1640181380.814,"125747.2"]},
+		{"metric":{"jobid":"35651038"},"value":[1640181380.814,"379697.46153350436"]},
+		{"metric":{"jobid":"35683050"},"value":[1640181380.814,"955.7333333333333"]},
+		{"metric":{"jobid":"35676304"},"value":[1640181380.814,"893883.7333333333"]},
+		{"metric":{"jobid":"35682305"},"value":[1640181380.814,"819.2"]},
+		{"metric":{"jobid":"35676288"},"value":[1640181380.814,"689493.3333333334"]},
+		{"metric":{"jobid":"35676299"},"value":[1640181380.814,"248627.2"]}
+		]}}`
+
+	var content []byte = []byte(data)
+
+	var lustreThroughputInfo *[]throughputInfo
+	var err error
+
+	lustreThroughputInfo, err = parseLustreTotalBytes(&content)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	var got_count int = len(*lustreThroughputInfo)
+	var expected_count int = 8
+
+	if expected_count != got_count {
+		t.Errorf("Expected count of metadata operations: %d - got: %d", expected_count, got_count)
+	}
+
+	var throughputInfo throughputInfo = (*lustreThroughputInfo)[0]
+	var expected_jobid string = "35652133"
+
+	if throughputInfo.jobid != expected_jobid {
+		t.Errorf("Expected jobid: %s - got: %s", expected_jobid, throughputInfo.jobid)
 	}
 }

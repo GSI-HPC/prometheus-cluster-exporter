@@ -293,7 +293,10 @@ func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users userInfoMap,
 		log.Trace("Bytes received: ", len(*content))
 	}
 
-	lustreMetadataOperations := parseLustreMetadataOperations(content)
+	lustreMetadataOperations, err := parseLustreMetadataOperations(content)
+	if err != nil {
+		return err
+	}
 
 	if log.IsLevelEnabled(log.DebugLevel) {
 		log.Debug("Count Lustre Jobids with metadata operatons: ", len(*lustreMetadataOperations))
@@ -395,7 +398,10 @@ func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users userInfoMa
 		log.Trace("Bytes received: ", len(*content))
 	}
 
-	lustreThroughput := parseLustreTotalBytes(content)
+	lustreThroughput, err := parseLustreTotalBytes(content)
+	if err != nil {
+		return err
+	}
 
 	if log.IsLevelEnabled(log.DebugLevel) {
 		log.Debug("Count Lustre Jobids with throughput: ", len(*lustreThroughput))
@@ -456,7 +462,7 @@ func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users userInfoMa
 	return nil
 }
 
-func parseLustreMetadataOperations(content *[]byte) *[]metadataInfo {
+func parseLustreMetadataOperations(content *[]byte) (*[]metadataInfo, error) {
 
 	log.Debug("Parsing Lustre metadata operations")
 
@@ -465,8 +471,11 @@ func parseLustreMetadataOperations(content *[]byte) *[]metadataInfo {
 	}
 
 	status, err := jsonparser.GetString(*content, "status")
-	if err != nil || status != "success" {
-		log.Panic(err)
+	if err != nil {
+		return nil, err
+	}
+	if status != "success" {
+		return nil, errors.New("value success not found in field status")
 	}
 
 	slice := make([]metadataInfo, 0, 1000)
@@ -480,32 +489,32 @@ func parseLustreMetadataOperations(content *[]byte) *[]metadataInfo {
 		jobid, err = jsonparser.GetString(value, "metric", "jobid")
 
 		if err != nil {
-			log.Error("Key jobid not found in value: ", string(value))
+			log.Warning("Key jobid not found in value: ", string(value))
 		} else if jobid == "" {
-			log.Error("Jobid is empty in value: ", string(value))
+			log.Warning("Jobid is empty in value: ", string(value))
 		} else {
 
 			// TODO: Should be possible to avoid calling GetString multiple times?
 			operationsStr, err := jsonparser.GetString(value, "value", "[1]")
 			if err != nil {
-				log.Error(err)
+				log.Warning(err)
 				goto Continue
 			}
 
 			operations, err = strconv.ParseInt(operationsStr, 10, 64)
 			if err != nil {
-				log.Error(err)
+				log.Warning(err)
 				goto Continue
 			}
 
 			target, err = jsonparser.GetString(value, "metric", "target")
 			if err != nil {
-				log.Error("Key target not found in value:", string(value))
+				log.Warning("Key target not found in value:", string(value))
 				goto Continue
 			}
 
 			if target == "" {
-				log.Error("Target is empty in value:", string(value))
+				log.Warning("Target is empty in value:", string(value))
 				goto Continue
 			}
 
@@ -525,10 +534,10 @@ func parseLustreMetadataOperations(content *[]byte) *[]metadataInfo {
 
 	}, "data", "result")
 
-	return &slice
+	return &slice, nil
 }
 
-func parseLustreTotalBytes(content *[]byte) *[]throughputInfo {
+func parseLustreTotalBytes(content *[]byte) (*[]throughputInfo, error) {
 
 	log.Debug("Parsing Lustre total bytes")
 
@@ -537,8 +546,11 @@ func parseLustreTotalBytes(content *[]byte) *[]throughputInfo {
 	}
 
 	status, err := jsonparser.GetString(*content, "status")
-	if err != nil || status != "success" {
-		log.Panic(err)
+	if err != nil {
+		return nil, err
+	}
+	if status != "success" {
+		return nil, errors.New("value success not found in field status")
 	}
 
 	slice := make([]throughputInfo, 0, 1000)
@@ -548,18 +560,18 @@ func parseLustreTotalBytes(content *[]byte) *[]throughputInfo {
 		jobid, err := jsonparser.GetString(value, "metric", "jobid")
 
 		if err != nil {
-			log.Error("Key jobid not found in value: ", string(value))
+			log.Warning("Key jobid not found in value: ", string(value))
 		} else {
 
 			throughputStr, err := jsonparser.GetString(value, "value", "[1]")
 			if err != nil {
-				log.Error(err)
+				log.Warning(err)
 				goto Continue
 			}
 
 			throughput, err := strconv.ParseFloat(throughputStr, 64)
 			if err != nil {
-				log.Error(err)
+				log.Warning(err)
 				goto Continue
 			}
 
@@ -571,7 +583,7 @@ func parseLustreTotalBytes(content *[]byte) *[]throughputInfo {
 
 	}, "data", "result")
 
-	return &slice
+	return &slice, nil
 }
 
 func isNumber(input *string) bool {
