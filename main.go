@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	version                 = "1.1.6"
+	version                 = "1.1.7"
 	namespace               = "cluster"
 	namespaceInternals      = "cluster_exporter"
 	httpApi                 = "/api/v1/query"
@@ -55,6 +55,8 @@ func initLogging(logLevel string) {
 
 	if logLevel == "ERROR" {
 		log.SetLevel(log.ErrorLevel)
+	} else if logLevel == "WARNING" {
+		log.SetLevel(log.WarnLevel)
 	} else if logLevel == "INFO" {
 		log.SetLevel(log.InfoLevel)
 	} else if logLevel == "DEBUG" {
@@ -109,7 +111,7 @@ func main() {
 
 	printVersion := flag.Bool("version", false, "Print version")
 	promServer := flag.String("promserver", "", "[REQUIRED] Prometheus Server to be used e.g. http://prometheus-server:9090")
-	logLevel := flag.String("log", defaultLogLevel, "Sets log level - INFO, DEBUG or TRACE")
+	logLevel := flag.String("log", defaultLogLevel, "Sets log level - ERROR, WARNING, INFO, DEBUG or TRACE")
 	port := flag.String("port", defaultPort, "The port to listen on for HTTP requests")
 	requestTimeout := flag.Int("timeout", defaultRequestTimeout, "HTTP request timeout in seconds for exporting Lustre Jobstats on Prometheus HTTP API")
 	timeRange := flag.String("timerange", defaultTimeRange, "Time range used for rate function on the retrieving Lustre metrics from Prometheus - A three digit number with unit s, m, h or d")
