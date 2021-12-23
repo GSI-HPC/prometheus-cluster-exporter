@@ -132,7 +132,7 @@ func main() {
 	metricsPath := "/metrics"
 	listenAddress := ":" + *port
 
-	log.Debug("Exporter started")
+	log.Info("Exporter started")
 
 	urlExports := newUrlExportLustreMetrics(*promServer, *timeRange)
 
@@ -155,5 +155,5 @@ func main() {
 		log.Error(err)
 	}
 
-	log.Debug("Exporter finished")
+	log.Info("Exporter finished")
 }
