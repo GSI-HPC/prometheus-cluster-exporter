@@ -111,7 +111,7 @@ func newExporter(requestTimeout int, urlLustreMetadataOperations string, urlLust
 	procMetadataOperationsMetric := newGaugeVecMetric(
 		namespace,
 		"proc_metadata_operations",
-		"Total metadata operations of process names per group and user on a target.",
+		"Total metadata operations of process names per group and user on a MDT.",
 		[]string{"proc_name", "group_name", "user_name", "target"})
 
 	procReadThroughputMetric := newGaugeVecMetric(
@@ -511,7 +511,7 @@ func parseLustreMetadataOperations(content *[]byte) *[]metadataInfo {
 
 			if !regexMetadataMDT.MatchString(target) {
 				if log.IsLevelEnabled(log.DebugLevel) {
-					log.Debug("Skipped metadata operation for non MDT target: ", string(value))
+					log.Debug("Skipped metadata operation for non-MDT target: ", string(value))
 				}
 				goto Continue
 			}

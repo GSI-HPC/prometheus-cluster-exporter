@@ -72,19 +72,19 @@ These metrics are always exported.
 
 ### Metadata
 
-Metadata operations are exposed per target, since it has been shown that it is a very helpful information to have.
+Metadata operations are exposed per MDT, since it has been shown that it is a very helpful information to have.
 
 #### **Jobs**
 
-| Metric                     | Labels                | Description                                                             |
-| ---------------------------| --------------------- | ----------------------------------------------------------------------- |
-| job\_metadata\_operations  | account, user, target | Total metadata operations of all jobs per account and user on a target. |
+| Metric                     | Labels                | Description                                                          |
+| ---------------------------| --------------------- | -------------------------------------------------------------------- |
+| job\_metadata\_operations  | account, user, target | Total metadata operations of all jobs per account and user on a MDT. |
 
 #### **Process Names**
 
-| Metric                     | Labels                                      | Description                                                                |
-| -------------------------- | ------------------------------------------- | -------------------------------------------------------------------------- |
-| proc\_metadata\_operations | proc\_name, group\_name, user\_name, target | Total metadata operations of process names per group and user on a target. |
+| Metric                     | Labels                                      | Description                                                             |
+| -------------------------- | ------------------------------------------- | ----------------------------------------------------------------------- |
+| proc\_metadata\_operations | proc\_name, group\_name, user\_name, target | Total metadata operations of process names per group and user on a MDT. |
 
 
 ### Throughput
