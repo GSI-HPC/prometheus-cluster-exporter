@@ -5,16 +5,9 @@ and process names with user and group information on a cluster.
 
 [Grafana dashboard](https://grafana.com/grafana/dashboards/14668) is also available.
 
-## Getting
-
-`go install github.com/GSI-HPC/prometheus-cluster-exporter@latest`
-
 ## Building
 
-```
-cd $GOPATH/src/github.com/GSI-HPC/prometheus-cluster-exporter
-go build -o prometheus-cluster-exporter *.go
-```
+`go build -o prometheus-cluster-exporter *.go`
 
 ## Requirements
 
