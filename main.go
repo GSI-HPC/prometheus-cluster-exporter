@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	version                 = "1.1.7"
+	version                 = "1.1.8"
 	namespace               = "cluster"
 	namespaceInternals      = "cluster_exporter"
 	httpApi                 = "/api/v1/query"
