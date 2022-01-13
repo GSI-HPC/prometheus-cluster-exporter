@@ -1,7 +1,7 @@
 # Prometheus Cluster Exporter
 
-A [Prometheus](https://prometheus.io/) exporter for Lustre metadata operations and IO throughput metrics associated to SLURM accounts  
-and process names with user and group information on a cluster.
+A [Prometheus](https://prometheus.io/) exporter for Lustre metadata operations and IO throughput metrics 
+associated to SLURM accounts and process names with user and group information on a cluster.
 
 [Grafana dashboard](https://grafana.com/grafana/dashboards/14668) is also available.
 
@@ -19,8 +19,7 @@ and process names with user and group information on a cluster.
 
 The squeue command from SLURM must be accessable locally to the exporter to retrieve the running jobs.  
 
-For instance running the exporter on the SLURM controller is advisable, since the target host should be  
-most stable for a productional environment.
+For instance running the exporter on the SLURM controller is advisable, since the target host should be most stable for a productional environment.
 
 ### Getent
 
