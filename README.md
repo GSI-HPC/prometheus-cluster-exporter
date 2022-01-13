@@ -7,7 +7,7 @@ and process names with user and group information on a cluster.
 
 ## Getting
 
-`go install github.com/GSI-HPC/prometheus-cluster-exporter`
+`go install github.com/GSI-HPC/prometheus-cluster-exporter@latest`
 
 ## Building
 
