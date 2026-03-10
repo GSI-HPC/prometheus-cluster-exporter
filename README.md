@@ -51,6 +51,8 @@ Depending on the required resolution and runtime of the exporter,
 
 ## Metrics
 
+See [docs/architecture.md](docs/architecture.md) for an internal overview and dataflow explanation.
+
 Cluster exporter metrics are prefixed with "cluster_".
 
 ### Global
