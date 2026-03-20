@@ -1,0 +1,28 @@
+---
+# SPDX-FileCopyrightText: 2025 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH, Darmstadt, Germany
+#
+# SPDX-License-Identifier: CC0-1.0
+
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.17'
+
+      - name: Build
+        run: CGO_ENABLED=0 go build -o prometheus-cluster-exporter .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prometheus-cluster-exporter
+          path: prometheus-cluster-exporter
