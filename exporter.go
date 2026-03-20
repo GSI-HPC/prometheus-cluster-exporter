@@ -287,24 +287,17 @@ func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users userInfoMap,
 			var procName string
 			var uid int
 
-			if lenFields == 2 {
-				procName = fields[0]
-
-				uid, err = strconv.Atoi(fields[1])
-				if err != nil {
-					return err
-				}
-			} else if lenFields > 2 {
-				lastFieldIdx := lenFields - 1
-				procName = strings.Join((fields[0:lastFieldIdx]), ".")
-
-				uid, err = strconv.Atoi(fields[lastFieldIdx])
-				if err != nil {
-					return err
-				}
-			} else {
-				log.Debug("Insufficient Lustre Jobstats procname_uid fields found in jobid:", metadataInfo.jobid)
+			if lenFields < 2 {
+				log.Warning("Insufficient Lustre Jobstats procname_uid fields found in jobid: ", metadataInfo.jobid)
 				continue
+			}
+
+			// procName is all fields except the last, joined by "."
+			procName = strings.Join(fields[:lenFields-1], ".") 
+			// uid is the last field
+			uid, err = strconv.Atoi(fields[lenFields-1])
+			if err != nil {
+				return err
 			}
 
 			userInfo, ok := users[uid]
@@ -393,25 +386,18 @@ func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users userInfoMa
 			var procName string
 			var uid int
 
-			if lenFields == 2 {
-				procName = fields[0]
-
-				uid, err = strconv.Atoi(fields[1])
-				if err != nil {
-					return err
-				}
-			} else if lenFields > 2 {
-				lastFieldIdx := lenFields - 1
-				procName = strings.Join((fields[0:lastFieldIdx]), ".")
-
-				uid, err = strconv.Atoi(fields[lastFieldIdx])
-				if err != nil {
-					return err
-				}
-			} else {
+			if lenFields < 2 {
 				log.Warning("Insufficient Lustre Jobstats procname_uid fields found in jobid: ", thInfo.jobid)
 				continue
 			}
+
+			// procName is all fields except the last, joined by "."
+			procName = strings.Join(fields[:lenFields-1], ".") 
+			// uid is the last field
+			uid, err = strconv.Atoi(fields[lenFields-1])
+			if err != nil {
+				return err
+			}			
 
 			userInfo, ok := users[uid]
 			if !ok {
