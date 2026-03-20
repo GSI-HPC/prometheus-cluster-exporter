@@ -297,6 +297,7 @@ func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users userInfoMap,
 			// uid is the last field
 			uid, err = strconv.Atoi(fields[lenFields-1])
 			if err != nil {
+				log.Warning("Failed to parse uid from fields: ", fields)
 				return err
 			}
 
@@ -396,6 +397,7 @@ func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users userInfoMa
 			// uid is the last field
 			uid, err = strconv.Atoi(fields[lenFields-1])
 			if err != nil {
+				log.Warning("Failed to parse uid from fields: ", fields)
 				return err
 			}			
 
@@ -545,10 +547,10 @@ func isNumber(input *string) bool {
 }
 
 func handleScrapeError(err error, scrapeOK *bool) {
-    if err != nil {
-        log.Errorln(err)
-        if scrapeOK != nil {
-            *scrapeOK = false
-        }
-    }
+	if err != nil {
+        	log.Errorln(err)
+	        if scrapeOK != nil {
+        		*scrapeOK = false
+        	}
+	}
 }
