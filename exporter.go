@@ -174,18 +174,9 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 		userInfoResult := <-e.channelUserInfo
 		groupInfoResult := <-e.channelGroupInfo
 
-		if runningJobsResult.err != nil {
-			scrapeOK = false
-			log.Errorln(runningJobsResult.err)
-		}
-		if userInfoResult.err != nil {
-			scrapeOK = false
-			log.Errorln(userInfoResult.err)
-		}
-		if groupInfoResult.err != nil {
-			scrapeOK = false
-			log.Errorln(groupInfoResult.err)
-		}
+		handleScrapeError(runningJobsResult.err, &scrapeOK) 
+		handleScrapeError(userInfoResult.err, &scrapeOK) 
+		handleScrapeError(groupInfoResult.err, &scrapeOK) 
 
 		e.stageExecutionMetric.WithLabelValues("retrieve_running_jobs").Set(runningJobsResult.elapsed)
 		e.stageExecutionMetric.WithLabelValues("retrieve_user_name_info").Set(userInfoResult.elapsed)
@@ -196,37 +187,19 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_metadata_metrics").Set(elapsed)
-
-		if err != nil {
-			if scrapeOK {
-				scrapeOK = false
-			}
-			log.Errorln(err)
-		}
+		handleScrapeError(err, &scrapeOK) 
 
 		start = time.Now()
 		err = e.buildLustreThroughputMetrics(runningJobsResult.jobs, userInfoResult.users, groupInfoResult.groups, true)
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_read_throughput_metrics").Set(elapsed)
-
-		if err != nil {
-			if scrapeOK {
-				scrapeOK = false
-			}
-			log.Errorln(err)
-		}
+		handleScrapeError(err, &scrapeOK) 
 
 		start = time.Now()
 		err = e.buildLustreThroughputMetrics(runningJobsResult.jobs, userInfoResult.users, groupInfoResult.groups, false)
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_write_throughput_metrics").Set(elapsed)
-
-		if err != nil {
-			if scrapeOK {
-				scrapeOK = false
-			}
-			log.Errorln(err)
-		}
+		handleScrapeError(err, &scrapeOK) 
 
 		e.stageExecutionMetric.Collect(ch)
 		e.jobMetadataOperationsMetric.Collect(ch)
@@ -588,4 +561,13 @@ func isNumber(input *string) bool {
 		return false
 	}
 	return true
+}
+
+func handleScrapeError(err error, scrapeOK *bool) {
+    if err != nil {
+        log.Errorln(err)
+        if scrapeOK != nil {
+            *scrapeOK = false
+        }
+    }
 }
