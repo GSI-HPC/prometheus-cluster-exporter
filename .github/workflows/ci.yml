@@ -22,7 +22,8 @@ jobs:
       - name: Build
         run: CGO_ENABLED=0 go build -o prometheus-cluster-exporter .
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: prometheus-cluster-exporter
           path: prometheus-cluster-exporter
+          archive: false
