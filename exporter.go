@@ -446,44 +446,46 @@ func parseLustreMetadataOperations(content *[]byte) (*[]metadataInfo, error) {
 
 		if err != nil {
 			log.Warning("Key jobid not found in value: ", string(value))
-		} else if jobid == "" {
+			return
+		} 
+		if jobid == "" {
 			log.Warning("Jobid is empty in value: ", string(value))
-		} else {
+			return
+		} 
 
-			// TODO: Should be possible to avoid calling GetString multiple times?
-			operationsStr, err := jsonparser.GetString(value, "value", "[1]")
-			if err != nil {
-				log.Warning(err)
-				return
-			}
-
-			operations, err = strconv.ParseInt(operationsStr, 10, 64)
-			if err != nil {
-				log.Warning(err)
-				return
-			}
-
-			target, err = jsonparser.GetString(value, "metric", "target")
-			if err != nil {
-				log.Warning("Key target not found in value:", string(value))
-				return
-			}
-
-			if target == "" {
-				log.Warning("Target is empty in value:", string(value))
-				return
-			}
-
-			if !regexMetadataMDT.MatchString(target) {
-				if log.IsLevelEnabled(log.DebugLevel) {
-					log.Debug("Skipped metadata operation for non-MDT target: ", string(value))
-				}
-				return
-			}
-
-			slice = append(slice, metadataInfo{jobid, target, operations})
-
+		// TODO: Should be possible to avoid calling GetString multiple times?
+		operationsStr, err := jsonparser.GetString(value, "value", "[1]")
+		if err != nil {
+			log.Warning(err)
+			return
 		}
+
+		operations, err = strconv.ParseInt(operationsStr, 10, 64)
+		if err != nil {
+			log.Warning(err)
+			return
+		}
+
+		target, err = jsonparser.GetString(value, "metric", "target")
+		if err != nil {
+			log.Warning("Key target not found in value:", string(value))
+			return
+		}
+
+		if target == "" {
+			log.Warning("Target is empty in value:", string(value))
+			return
+		}
+
+		if !regexMetadataMDT.MatchString(target) {
+			if log.IsLevelEnabled(log.DebugLevel) {
+				log.Debug("Skipped metadata operation for non-MDT target: ", string(value))
+			}
+			return
+		}
+
+		slice = append(slice, metadataInfo{jobid, target, operations})
+	
 	}, "data", "result")
 
 	return &slice, nil
@@ -513,22 +515,23 @@ func parseLustreTotalBytes(content *[]byte) (*[]throughputInfo, error) {
 
 		if err != nil {
 			log.Warning("Key jobid not found in value: ", string(value))
-		} else {
+			return
+		} 
 
-			throughputStr, err := jsonparser.GetString(value, "value", "[1]")
-			if err != nil {
-				log.Warning(err)
-				return
-			}
-
-			throughput, err := strconv.ParseFloat(throughputStr, 64)
-			if err != nil {
-				log.Warning(err)
-				return
-			}
-
-			slice = append(slice, throughputInfo{jobid, throughput})
+		throughputStr, err := jsonparser.GetString(value, "value", "[1]")
+		if err != nil {
+			log.Warning(err)
+			return
 		}
+
+		throughput, err := strconv.ParseFloat(throughputStr, 64)
+		if err != nil {
+			log.Warning(err)
+			return
+		}
+
+		slice = append(slice, throughputInfo{jobid, throughput})
+
 	}, "data", "result")
 
 	return &slice, nil
