@@ -468,40 +468,36 @@ func parseLustreMetadataOperations(content *[]byte) (*[]metadataInfo, error) {
 			operationsStr, err := jsonparser.GetString(value, "value", "[1]")
 			if err != nil {
 				log.Warning(err)
-				goto Continue
+				return
 			}
 
 			operations, err = strconv.ParseInt(operationsStr, 10, 64)
 			if err != nil {
 				log.Warning(err)
-				goto Continue
+				return
 			}
 
 			target, err = jsonparser.GetString(value, "metric", "target")
 			if err != nil {
 				log.Warning("Key target not found in value:", string(value))
-				goto Continue
+				return
 			}
 
 			if target == "" {
 				log.Warning("Target is empty in value:", string(value))
-				goto Continue
+				return
 			}
 
 			if !regexMetadataMDT.MatchString(target) {
 				if log.IsLevelEnabled(log.DebugLevel) {
 					log.Debug("Skipped metadata operation for non-MDT target: ", string(value))
 				}
-				goto Continue
+				return
 			}
 
 			slice = append(slice, metadataInfo{jobid, target, operations})
 
 		}
-
-	Continue:
-		// End of jsonparser.ArrayEach
-
 	}, "data", "result")
 
 	return &slice, nil
@@ -536,21 +532,17 @@ func parseLustreTotalBytes(content *[]byte) (*[]throughputInfo, error) {
 			throughputStr, err := jsonparser.GetString(value, "value", "[1]")
 			if err != nil {
 				log.Warning(err)
-				goto Continue
+				return
 			}
 
 			throughput, err := strconv.ParseFloat(throughputStr, 64)
 			if err != nil {
 				log.Warning(err)
-				goto Continue
+				return
 			}
 
 			slice = append(slice, throughputInfo{jobid, throughput})
 		}
-
-	Continue:
-		// End of jsonparser.ArrayEach
-
 	}, "data", "result")
 
 	return &slice, nil
