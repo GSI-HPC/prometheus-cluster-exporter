@@ -174,9 +174,9 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 		userInfoResult := <-e.channelUserInfo
 		groupInfoResult := <-e.channelGroupInfo
 
-		handleScrapeError(runningJobsResult.err, &scrapeOK) 
-		handleScrapeError(userInfoResult.err, &scrapeOK) 
-		handleScrapeError(groupInfoResult.err, &scrapeOK) 
+		handleScrapeError("RunningJobsChannel",runningJobsResult.err, &scrapeOK) 
+		handleScrapeError("UserInfoChannel", userInfoResult.err, &scrapeOK) 
+		handleScrapeError("GroupInfoChannel", groupInfoResult.err, &scrapeOK) 
 
 		e.stageExecutionMetric.WithLabelValues("retrieve_running_jobs").Set(runningJobsResult.elapsed)
 		e.stageExecutionMetric.WithLabelValues("retrieve_user_name_info").Set(userInfoResult.elapsed)
@@ -184,22 +184,21 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 
 		start = time.Now()
 		err = e.buildLustreMetadataMetrics(runningJobsResult.jobs, userInfoResult.users, groupInfoResult.groups)
-
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_metadata_metrics").Set(elapsed)
-		handleScrapeError(err, &scrapeOK) 
+		handleScrapeError("BuildMetadataMetrics", err, &scrapeOK) 
 
 		start = time.Now()
 		err = e.buildLustreThroughputMetrics(runningJobsResult.jobs, userInfoResult.users, groupInfoResult.groups, true)
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_read_throughput_metrics").Set(elapsed)
-		handleScrapeError(err, &scrapeOK) 
+		handleScrapeError("BuildReadThrouputMetrics", err, &scrapeOK) 
 
 		start = time.Now()
 		err = e.buildLustreThroughputMetrics(runningJobsResult.jobs, userInfoResult.users, groupInfoResult.groups, false)
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_write_throughput_metrics").Set(elapsed)
-		handleScrapeError(err, &scrapeOK) 
+		handleScrapeError("BuildWriteThrouputMetrics", err, &scrapeOK) 
 
 		e.stageExecutionMetric.Collect(ch)
 		e.jobMetadataOperationsMetric.Collect(ch)
@@ -546,9 +545,9 @@ func isNumber(input *string) bool {
 	return true
 }
 
-func handleScrapeError(err error, scrapeOK *bool) {
+func handleScrapeError(sender string, err error, scrapeOK *bool) {
 	if err != nil {
-        	log.Errorln(err)
+        	log.Errorln(sender, ": ",err)
 	        if scrapeOK != nil {
         		*scrapeOK = false
         	}
