@@ -174,9 +174,9 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 		userInfoResult := <-e.channelUserInfo
 		groupInfoResult := <-e.channelGroupInfo
 
-		handleScrapeError("RunningJobsChannel",runningJobsResult.err, &scrapeOK) 
-		handleScrapeError("UserInfoChannel", userInfoResult.err, &scrapeOK) 
-		handleScrapeError("GroupInfoChannel", groupInfoResult.err, &scrapeOK) 
+		recordScrapeError("RunningJobsChannel", runningJobsResult.err, &scrapeOK)
+		recordScrapeError("UserInfoChannel", userInfoResult.err, &scrapeOK)
+		recordScrapeError("GroupInfoChannel", groupInfoResult.err, &scrapeOK)
 
 		e.stageExecutionMetric.WithLabelValues("retrieve_running_jobs").Set(runningJobsResult.elapsed)
 		e.stageExecutionMetric.WithLabelValues("retrieve_user_name_info").Set(userInfoResult.elapsed)
@@ -186,19 +186,19 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 		err = e.buildLustreMetadataMetrics(runningJobsResult.jobs, userInfoResult.users, groupInfoResult.groups)
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_metadata_metrics").Set(elapsed)
-		handleScrapeError("BuildMetadataMetrics", err, &scrapeOK) 
+		recordScrapeError("BuildMetadataMetrics", err, &scrapeOK)
 
 		start = time.Now()
 		err = e.buildLustreThroughputMetrics(runningJobsResult.jobs, userInfoResult.users, groupInfoResult.groups, true)
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_read_throughput_metrics").Set(elapsed)
-		handleScrapeError("BuildReadThrouputMetrics", err, &scrapeOK) 
+		recordScrapeError("BuildReadThroughputMetrics", err, &scrapeOK)
 
 		start = time.Now()
 		err = e.buildLustreThroughputMetrics(runningJobsResult.jobs, userInfoResult.users, groupInfoResult.groups, false)
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_write_throughput_metrics").Set(elapsed)
-		handleScrapeError("BuildWriteThrouputMetrics", err, &scrapeOK) 
+		recordScrapeError("BuildWriteThroughputMetrics", err, &scrapeOK)
 
 		e.stageExecutionMetric.Collect(ch)
 		e.jobMetadataOperationsMetric.Collect(ch)
@@ -292,7 +292,7 @@ func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users userInfoMap,
 			}
 
 			// procName is all fields except the last, joined by "."
-			procName = strings.Join(fields[:lenFields-1], ".") 
+			procName = strings.Join(fields[:lenFields-1], ".")
 			// uid is the last field
 			uid, err = strconv.Atoi(fields[lenFields-1])
 			if err != nil {
@@ -392,13 +392,13 @@ func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users userInfoMa
 			}
 
 			// procName is all fields except the last, joined by "."
-			procName = strings.Join(fields[:lenFields-1], ".") 
+			procName = strings.Join(fields[:lenFields-1], ".")
 			// uid is the last field
 			uid, err = strconv.Atoi(fields[lenFields-1])
 			if err != nil {
 				log.Warning("Failed to parse uid from fields: ", fields)
 				return err
-			}			
+			}
 
 			userInfo, ok := users[uid]
 			if !ok {
@@ -448,11 +448,11 @@ func parseLustreMetadataOperations(content *[]byte) (*[]metadataInfo, error) {
 		if err != nil {
 			log.Warning("Key jobid not found in value: ", string(value))
 			return
-		} 
+		}
 		if jobid == "" {
 			log.Warning("Jobid is empty in value: ", string(value))
 			return
-		} 
+		}
 
 		// TODO: Should be possible to avoid calling GetString multiple times?
 		operationsStr, err := jsonparser.GetString(value, "value", "[1]")
@@ -486,7 +486,7 @@ func parseLustreMetadataOperations(content *[]byte) (*[]metadataInfo, error) {
 		}
 
 		slice = append(slice, metadataInfo{jobid, target, operations})
-	
+
 	}, "data", "result")
 
 	return &slice, nil
@@ -517,7 +517,7 @@ func parseLustreTotalBytes(content *[]byte) (*[]throughputInfo, error) {
 		if err != nil {
 			log.Warning("Key jobid not found in value: ", string(value))
 			return
-		} 
+		}
 
 		throughputStr, err := jsonparser.GetString(value, "value", "[1]")
 		if err != nil {
@@ -545,11 +545,11 @@ func isNumber(input *string) bool {
 	return true
 }
 
-func handleScrapeError(sender string, err error, scrapeOK *bool) {
+func recordScrapeError(sender string, err error, scrapeOK *bool) {
 	if err != nil {
-        	log.Errorln(sender, ": ",err)
-	        if scrapeOK != nil {
-        		*scrapeOK = false
-        	}
+		log.Errorln(sender, ": ", err)
+		if scrapeOK != nil {
+			*scrapeOK = false
+		}
 	}
 }
