@@ -174,18 +174,9 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 		userInfoResult := <-e.channelUserInfo
 		groupInfoResult := <-e.channelGroupInfo
 
-		if runningJobsResult.err != nil {
-			scrapeOK = false
-			log.Errorln(runningJobsResult.err)
-		}
-		if userInfoResult.err != nil {
-			scrapeOK = false
-			log.Errorln(userInfoResult.err)
-		}
-		if groupInfoResult.err != nil {
-			scrapeOK = false
-			log.Errorln(groupInfoResult.err)
-		}
+		recordScrapeError("RunningJobsChannel", runningJobsResult.err, &scrapeOK)
+		recordScrapeError("UserInfoChannel", userInfoResult.err, &scrapeOK)
+		recordScrapeError("GroupInfoChannel", groupInfoResult.err, &scrapeOK)
 
 		e.stageExecutionMetric.WithLabelValues("retrieve_running_jobs").Set(runningJobsResult.elapsed)
 		e.stageExecutionMetric.WithLabelValues("retrieve_user_name_info").Set(userInfoResult.elapsed)
@@ -193,40 +184,21 @@ func (e *exporter) Collect(ch chan<- prometheus.Metric) {
 
 		start = time.Now()
 		err = e.buildLustreMetadataMetrics(runningJobsResult.jobs, userInfoResult.users, groupInfoResult.groups)
-
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_metadata_metrics").Set(elapsed)
-
-		if err != nil {
-			if scrapeOK {
-				scrapeOK = false
-			}
-			log.Errorln(err)
-		}
+		recordScrapeError("BuildMetadataMetrics", err, &scrapeOK)
 
 		start = time.Now()
 		err = e.buildLustreThroughputMetrics(runningJobsResult.jobs, userInfoResult.users, groupInfoResult.groups, true)
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_read_throughput_metrics").Set(elapsed)
-
-		if err != nil {
-			if scrapeOK {
-				scrapeOK = false
-			}
-			log.Errorln(err)
-		}
+		recordScrapeError("BuildReadThroughputMetrics", err, &scrapeOK)
 
 		start = time.Now()
 		err = e.buildLustreThroughputMetrics(runningJobsResult.jobs, userInfoResult.users, groupInfoResult.groups, false)
 		elapsed = time.Since(start).Seconds()
 		e.stageExecutionMetric.WithLabelValues("build_write_throughput_metrics").Set(elapsed)
-
-		if err != nil {
-			if scrapeOK {
-				scrapeOK = false
-			}
-			log.Errorln(err)
-		}
+		recordScrapeError("BuildWriteThroughputMetrics", err, &scrapeOK)
 
 		e.stageExecutionMetric.Collect(ch)
 		e.jobMetadataOperationsMetric.Collect(ch)
@@ -314,24 +286,18 @@ func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users userInfoMap,
 			var procName string
 			var uid int
 
-			if lenFields == 2 {
-				procName = fields[0]
-
-				uid, err = strconv.Atoi(fields[1])
-				if err != nil {
-					return err
-				}
-			} else if lenFields > 2 {
-				lastFieldIdx := lenFields - 1
-				procName = strings.Join((fields[0:lastFieldIdx]), ".")
-
-				uid, err = strconv.Atoi(fields[lastFieldIdx])
-				if err != nil {
-					return err
-				}
-			} else {
-				log.Debug("Insufficient Lustre Jobstats procname_uid fields found in jobid:", metadataInfo.jobid)
+			if lenFields < 2 {
+				log.Warning("Insufficient Lustre Jobstats procname_uid fields found in jobid: ", metadataInfo.jobid)
 				continue
+			}
+
+			// procName is all fields except the last, joined by "."
+			procName = strings.Join(fields[:lenFields-1], ".")
+			// uid is the last field
+			uid, err = strconv.Atoi(fields[lenFields-1])
+			if err != nil {
+				log.Warning("Failed to parse uid from fields: ", fields)
+				return err
 			}
 
 			userInfo, ok := users[uid]
@@ -420,24 +386,18 @@ func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users userInfoMa
 			var procName string
 			var uid int
 
-			if lenFields == 2 {
-				procName = fields[0]
-
-				uid, err = strconv.Atoi(fields[1])
-				if err != nil {
-					return err
-				}
-			} else if lenFields > 2 {
-				lastFieldIdx := lenFields - 1
-				procName = strings.Join((fields[0:lastFieldIdx]), ".")
-
-				uid, err = strconv.Atoi(fields[lastFieldIdx])
-				if err != nil {
-					return err
-				}
-			} else {
+			if lenFields < 2 {
 				log.Warning("Insufficient Lustre Jobstats procname_uid fields found in jobid: ", thInfo.jobid)
 				continue
+			}
+
+			// procName is all fields except the last, joined by "."
+			procName = strings.Join(fields[:lenFields-1], ".")
+			// uid is the last field
+			uid, err = strconv.Atoi(fields[lenFields-1])
+			if err != nil {
+				log.Warning("Failed to parse uid from fields: ", fields)
+				return err
 			}
 
 			userInfo, ok := users[uid]
@@ -487,47 +447,45 @@ func parseLustreMetadataOperations(content *[]byte) (*[]metadataInfo, error) {
 
 		if err != nil {
 			log.Warning("Key jobid not found in value: ", string(value))
-		} else if jobid == "" {
+			return
+		}
+		if jobid == "" {
 			log.Warning("Jobid is empty in value: ", string(value))
-		} else {
-
-			// TODO: Should be possible to avoid calling GetString multiple times?
-			operationsStr, err := jsonparser.GetString(value, "value", "[1]")
-			if err != nil {
-				log.Warning(err)
-				goto Continue
-			}
-
-			operations, err = strconv.ParseInt(operationsStr, 10, 64)
-			if err != nil {
-				log.Warning(err)
-				goto Continue
-			}
-
-			target, err = jsonparser.GetString(value, "metric", "target")
-			if err != nil {
-				log.Warning("Key target not found in value:", string(value))
-				goto Continue
-			}
-
-			if target == "" {
-				log.Warning("Target is empty in value:", string(value))
-				goto Continue
-			}
-
-			if !regexMetadataMDT.MatchString(target) {
-				if log.IsLevelEnabled(log.DebugLevel) {
-					log.Debug("Skipped metadata operation for non-MDT target: ", string(value))
-				}
-				goto Continue
-			}
-
-			slice = append(slice, metadataInfo{jobid, target, operations})
-
+			return
 		}
 
-	Continue:
-		// End of jsonparser.ArrayEach
+		// TODO: Should be possible to avoid calling GetString multiple times?
+		operationsStr, err := jsonparser.GetString(value, "value", "[1]")
+		if err != nil {
+			log.Warning(err)
+			return
+		}
+
+		operations, err = strconv.ParseInt(operationsStr, 10, 64)
+		if err != nil {
+			log.Warning(err)
+			return
+		}
+
+		target, err = jsonparser.GetString(value, "metric", "target")
+		if err != nil {
+			log.Warning("Key target not found in value:", string(value))
+			return
+		}
+
+		if target == "" {
+			log.Warning("Target is empty in value:", string(value))
+			return
+		}
+
+		if !regexMetadataMDT.MatchString(target) {
+			if log.IsLevelEnabled(log.DebugLevel) {
+				log.Debug("Skipped metadata operation for non-MDT target: ", string(value))
+			}
+			return
+		}
+
+		slice = append(slice, metadataInfo{jobid, target, operations})
 
 	}, "data", "result")
 
@@ -558,25 +516,22 @@ func parseLustreTotalBytes(content *[]byte) (*[]throughputInfo, error) {
 
 		if err != nil {
 			log.Warning("Key jobid not found in value: ", string(value))
-		} else {
-
-			throughputStr, err := jsonparser.GetString(value, "value", "[1]")
-			if err != nil {
-				log.Warning(err)
-				goto Continue
-			}
-
-			throughput, err := strconv.ParseFloat(throughputStr, 64)
-			if err != nil {
-				log.Warning(err)
-				goto Continue
-			}
-
-			slice = append(slice, throughputInfo{jobid, throughput})
+			return
 		}
 
-	Continue:
-		// End of jsonparser.ArrayEach
+		throughputStr, err := jsonparser.GetString(value, "value", "[1]")
+		if err != nil {
+			log.Warning(err)
+			return
+		}
+
+		throughput, err := strconv.ParseFloat(throughputStr, 64)
+		if err != nil {
+			log.Warning(err)
+			return
+		}
+
+		slice = append(slice, throughputInfo{jobid, throughput})
 
 	}, "data", "result")
 
@@ -588,4 +543,13 @@ func isNumber(input *string) bool {
 		return false
 	}
 	return true
+}
+
+func recordScrapeError(sender string, err error, scrapeOK *bool) {
+	if err != nil {
+		log.Errorln(sender, ": ", err)
+		if scrapeOK != nil {
+			*scrapeOK = false
+		}
+	}
 }
