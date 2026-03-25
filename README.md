@@ -53,7 +53,7 @@ Depending on the required resolution and runtime of the exporter,
 
 See [docs/architecture.md](docs/architecture.md) for an internal overview and dataflow explanation.
 
-Cluster exporter metrics are prefixed with "cluster_".
+Cluster exporter metrics are prefixed with `cluster_`.
 
 ### Global
 
@@ -97,10 +97,10 @@ Metadata operations are exposed per MDT, since it has been shown that it is a ve
 | proc\_read\_throughput\_bytes  | proc\_name, group\_name, user\_name | Total IO read throughput of process names on the cluster per group and user in bytes per second.  |
 | proc\_write\_throughput\_bytes | proc\_name, group\_name, user\_name | Total IO write throughput of process names on the cluster per group and user in bytes per second. |
 
-## Multiple Srape Prevention
+## Multiple Scrape Prevention
 
 Since the forked processes do not have a timeout handling, they might block for a uncertain amount of time.  
-It is very unlikely that reexecuting the processes will solve the problem of beeing blocked.  
+It is very unlikely that reexecuting the processes will solve the problem of being blocked.
 Therefore multiple scrapes at a time will be prevented by the exporter.  
 
 The following warning will be displayed on afterward scrape executions, were a scrape is still active:  
