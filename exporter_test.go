@@ -64,6 +64,84 @@ func TestParseLustreMetadataOperations(t *testing.T) {
 
 }
 
+func TestResolveProcInfo(t *testing.T) {
+
+	users := userInfoMap{
+		1001: userInfo{user: "alice", uid: 1001, gid: 100},
+		1002: userInfo{user: "carol", uid: 1002, gid: 999}, // GID not in groups
+	}
+
+	groups := groupInfoMap{
+		100: groupInfo{group: "staff", gid: 100},
+	}
+
+	// Simple procname.uid — verify all returned fields
+	info, err := resolveProcInfo("cp.1001", users, groups)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if info == nil {
+		t.Fatal("Expected non-nil procInfo for cp.1001")
+	}
+	if info.procName != "cp" {
+		t.Errorf("Expected procName 'cp', got '%s'", info.procName)
+	}
+	if info.userName != "alice" {
+		t.Errorf("Expected userName 'alice', got '%s'", info.userName)
+	}
+	if info.groupName != "staff" {
+		t.Errorf("Expected groupName 'staff', got '%s'", info.groupName)
+	}
+
+	// Dotted procname — only procName parsing differs
+	info, err = resolveProcInfo("my.app.1001", users, groups)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if info == nil {
+		t.Fatal("Expected non-nil procInfo for my.app.1001")
+	}
+	if info.procName != "my.app" {
+		t.Errorf("Expected procName 'my.app', got '%s'", info.procName)
+	}
+
+	// No dot separator → skip (nil, nil)
+	info, err = resolveProcInfo("nodot", users, groups)
+	if err != nil {
+		t.Errorf("Unexpected error for 'nodot': %v", err)
+	}
+	if info != nil {
+		t.Error("Expected nil procInfo for 'nodot'")
+	}
+
+	// Non-numeric UID → error
+	info, err = resolveProcInfo("cp.notanumber", users, groups)
+	if err == nil {
+		t.Error("Expected error for non-numeric UID")
+	}
+	if info != nil {
+		t.Error("Expected nil procInfo for non-numeric UID")
+	}
+
+	// Unknown UID → skip (nil, nil)
+	info, err = resolveProcInfo("cp.9999", users, groups)
+	if err != nil {
+		t.Errorf("Unexpected error for unknown UID: %v", err)
+	}
+	if info != nil {
+		t.Error("Expected nil procInfo for unknown UID")
+	}
+
+	// Known UID but unknown GID → skip (nil, nil)
+	info, err = resolveProcInfo("cp.1002", users, groups)
+	if err != nil {
+		t.Errorf("Unexpected error for unknown GID: %v", err)
+	}
+	if info != nil {
+		t.Error("Expected nil procInfo for unknown GID")
+	}
+}
+
 func TestParseLustreTotalBytes(t *testing.T) {
 
 	var data string = `{"status":"success","data":{"resultType":"vector","result":[

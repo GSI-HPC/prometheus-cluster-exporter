@@ -54,6 +54,12 @@ type throughputInfo struct {
 	throughput float64
 }
 
+type procInfo struct {
+	procName  string
+	userName  string
+	groupName string
+}
+
 func newGaugeVecMetric(namespace string, metricName string, docString string, constLabels []string) *prometheus.GaugeVec {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -280,40 +286,16 @@ func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users userInfoMap,
 
 		} else { // Should look like process name with UID (proc_name.uid)
 
-			fields := strings.Split(metadataInfo.jobid, ".")
-			lenFields := len(fields)
-
-			var procName string
-			var uid int
-
-			if lenFields < 2 {
-				log.Warning("Insufficient Lustre Jobstats procname_uid fields found in jobid: ", metadataInfo.jobid)
-				continue
-			}
-
-			// procName is all fields except the last, joined by "."
-			procName = strings.Join(fields[:lenFields-1], ".")
-			// uid is the last field
-			uid, err = strconv.Atoi(fields[lenFields-1])
+			info, err := resolveProcInfo(metadataInfo.jobid, users, groups)
 			if err != nil {
-				log.Warning("Failed to parse uid from fields: ", fields)
 				return err
 			}
-
-			userInfo, ok := users[uid]
-			if !ok {
-				log.Warning("uid not found in users map: ", uid)
-				continue
-			}
-
-			groupInfo, ok := groups[userInfo.gid]
-			if !ok {
-				log.Warning("gid not found in groups map: ", userInfo.gid)
+			if info == nil {
 				continue
 			}
 
 			e.procMetadataOperationsMetric.WithLabelValues(
-				procName, groupInfo.group, userInfo.user, metadataInfo.target).Add(float64(metadataInfo.operations))
+				info.procName, info.groupName, info.userName, metadataInfo.target).Add(float64(metadataInfo.operations))
 		}
 	}
 
@@ -380,43 +362,61 @@ func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users userInfoMa
 
 		} else { // Should look like process name with UID (proc_name.uid)
 
-			fields := strings.Split(thInfo.jobid, ".")
-			lenFields := len(fields)
-
-			var procName string
-			var uid int
-
-			if lenFields < 2 {
-				log.Warning("Insufficient Lustre Jobstats procname_uid fields found in jobid: ", thInfo.jobid)
-				continue
-			}
-
-			// procName is all fields except the last, joined by "."
-			procName = strings.Join(fields[:lenFields-1], ".")
-			// uid is the last field
-			uid, err = strconv.Atoi(fields[lenFields-1])
+			info, err := resolveProcInfo(thInfo.jobid, users, groups)
 			if err != nil {
-				log.Warning("Failed to parse uid from fields: ", fields)
 				return err
 			}
-
-			userInfo, ok := users[uid]
-			if !ok {
-				log.Warning("uid not found in users map: ", uid)
+			if info == nil {
 				continue
 			}
 
-			groupInfo, ok := groups[userInfo.gid]
-			if !ok {
-				log.Warning("gid not found in groups map: ", userInfo.gid)
-				continue
-			}
-
-			procMetric.WithLabelValues(procName, groupInfo.group, userInfo.user).Add(thInfo.throughput)
+			procMetric.WithLabelValues(info.procName, info.groupName, info.userName).Add(thInfo.throughput)
 		}
 	}
 
 	return nil
+}
+
+// resolveProcInfo parses a "procname.uid" jobid and resolves the UID to
+// user and group information via the provided lookup maps.
+// Returns (nil, nil) when the entry should be skipped (insufficient fields,
+// unknown UID or GID), and (nil, err) on fatal parse errors (malformed UID).
+func resolveProcInfo(jobid string, users userInfoMap, groups groupInfoMap) (*procInfo, error) {
+
+	fields := strings.Split(jobid, ".")
+	lenFields := len(fields)
+
+	if lenFields < 2 {
+		log.Warning("Insufficient Lustre Jobstats procname_uid fields found in jobid: ", jobid)
+		return nil, nil
+	}
+
+	// procName is all fields except the last, joined by "."
+	procName := strings.Join(fields[:lenFields-1], ".")
+	// uid is the last field
+	uid, err := strconv.Atoi(fields[lenFields-1])
+	if err != nil {
+		log.Warning("Failed to parse uid from fields: ", fields)
+		return nil, err
+	}
+
+	userInfo, ok := users[uid]
+	if !ok {
+		log.Warning("uid not found in users map: ", uid)
+		return nil, nil
+	}
+
+	groupInfo, ok := groups[userInfo.gid]
+	if !ok {
+		log.Warning("gid not found in groups map: ", userInfo.gid)
+		return nil, nil
+	}
+
+	return &procInfo{
+		procName:  procName,
+		userName:  userInfo.user,
+		groupName: groupInfo.group,
+	}, nil
 }
 
 func parseLustreMetadataOperations(content *[]byte) (*[]metadataInfo, error) {
