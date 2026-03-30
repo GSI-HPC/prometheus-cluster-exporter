@@ -1,48 +1,40 @@
-%define        __spec_install_post %{nil}
-%define          debug_package %{nil}
-%define        __os_install_post %{_dbpath}/brp-compress
-
 Name:           prometheus-cluster-exporter
 Version:        1.1.7
 Release:        1%{?dist}
 Summary:        Prometheus exporter for Lustre IO throughput metrics associated to SLURM accounts and processes on a cluster.
 Group:          Monitoring
 
-License:        GPL 3.0
+License:        GPL-3.0-only
 URL:            https://github.com/GSI-HPC/prometheus-cluster-exporter
 Source0:        %{name}-%{version}.tar.gz
+Source1:        %{name}.service
+Source2:        %{name}.options
 
-Requires(pre): shadow-utils
-
-Requires(post): systemd
-Requires(preun): systemd
-Requires(postun): systemd
 %{?systemd_requires}
-BuildRequires:  systemd
-
-BuildRoot:      %{_tmppath}/%{name}-%{version}-1-root
+BuildRequires:  systemd-rpm-macros
+BuildRequires:  golang
+Requires(pre): shadow-utils
 
 %description
 A Prometheus exporter for Lustre metadata operations and IO throughput metrics associated to SLURM accounts
 and process names with user and group information on a cluster.
 
+%global debug_package %{nil}
+
 %prep
 %setup -q
 
 %build
-# Empty section.
+GO111MODULE=on
+go build -o prometheus-cluster-exporter ./
 
 %install
-rm -rf %{buildroot}
-mkdir -vp  %{buildroot}
-mkdir -vp %{buildroot}%{_unitdir}/
-cp usr/lib/systemd/system/%{name}.service %{buildroot}%{_unitdir}/
+install -Dm0755 prometheus-cluster-exporter %{buildroot}%{_bindir}/prometheus-cluster-exporter
+install -Dm0644 %{SOURCE1} %{buildroot}%{_unitdir}/prometheus-cluster-exporter.service
+install -Dm0644 %{SOURCE2} %{buildroot}/etc/default/prometheus-cluster-exporter.options
 
-# in builddir
-cp -a * %{buildroot}
-
-%clean
-rm -rf %{buildroot}
+%check
+go test ./...
 
 %pre
 getent group prometheus >/dev/null || groupadd -r prometheus
@@ -52,8 +44,7 @@ getent passwd prometheus >/dev/null || \
 exit 0
 
 %post
-systemctl enable %{name}.service
-systemctl start %{name}.service
+%systemd_post %{name}.service
 
 %preun
 %systemd_preun %{name}.service
@@ -63,6 +54,6 @@ systemctl start %{name}.service
 
 %files
 %defattr(-,root,root,-)
-%config /etc/default/prometheus-cluster-exporter.options
+%config(noreplace) /etc/default/prometheus-cluster-exporter.options
 %{_bindir}/prometheus-cluster-exporter
-%{_unitdir}/%{name}.service
+%{_unitdir}/prometheus-cluster-exporter.service

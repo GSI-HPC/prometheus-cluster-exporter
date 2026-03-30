@@ -1,27 +1,24 @@
 # How-To Create the RPM Package
 
+Prerequisites: 
+
+* Target version tag (1.1.7 in this example) needs to match contents of .spec file.
+* Entire code needs to be in folder named prometheus-cluster-exporter-1.1.7, relative to current folder.
+
 Create required rpmbuild directory structure in the users home directory:
 
 * `mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}`
-* `mkdir -p ~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.7/usr/bin/`
-* `mkdir -p ~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.7/etc/default/`
-* `mkdir -p ~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.7/usr/lib/systemd/system/`
 
-Provide the following files to build the rpm package:
+Create tarball for full source code (top level folder name is transformed to add version tag):
 
-* `~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.7/usr/bin/prometheus-cluster-exporter`
-* `~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.7/etc/default/prometheus-cluster-exporter.options`
-* `~/rpmbuild/SOURCES/prometheus-cluster-exporter-1.1.7/usr/lib/systemd/system/prometheus-cluster-exporter.service`
-* `~/rpmbuild/SPECS/prometheus-cluster-exporter.spec`
+* `tar czf prometheus-cluster-exporter-1.1.7.tar.gz prometheus-cluster-exporter-1.1.7/`
 
-> Do not forget to specify the proper prometheus server in the options file.
+Provide required files to build the rpm package:
 
-Create the tar ball:
-
-* `cd ~/rpmbuild/SOURCES`
-* `tar -czvf prometheus-cluster-exporter-1.1.7.tar.gz prometheus-cluster-exporter-1.1.7`
-
-> Use relative paths here, otherwise rpmbuild will not find the extracted files!
+* `cp prometheus-cluster-exporter-1.1.7.tar.gz ~/rpmbuild/SOURCES/`
+* `cp prometheus-cluster-exporter-1.1.7/rpm/prometheus-cluster-exporter.spec ~/rpmbuild/SPECS/`
+* `cp prometheus-cluster-exporter-1.1.7/systemd/prometheus-cluster-exporter.service ~/rpmbuild/SOURCES/`
+* `cp prometheus-cluster-exporter-1.1.7/systemd/prometheus-cluster-exporter.options ~/rpmbuild/SOURCES/`
 
 Create RPM package:
 
