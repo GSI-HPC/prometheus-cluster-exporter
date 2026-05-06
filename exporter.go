@@ -288,7 +288,7 @@ func (e *exporter) buildLustreMetadataMetrics(jobs []jobInfo, users userInfoMap,
 
 			info, err := resolveProcInfo(metadataInfo.jobid, users, groups)
 			if err != nil {
-				return err
+				continue
 			}
 			if info == nil {
 				continue
@@ -364,7 +364,7 @@ func (e *exporter) buildLustreThroughputMetrics(jobs []jobInfo, users userInfoMa
 
 			info, err := resolveProcInfo(thInfo.jobid, users, groups)
 			if err != nil {
-				return err
+				continue
 			}
 			if info == nil {
 				continue
