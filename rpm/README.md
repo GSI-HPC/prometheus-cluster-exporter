@@ -1,5 +1,7 @@
 # How-To Create the RPM Package
 
+An automated Vagrant-based RPM builder is found in the subfolder `exporter-rpm-builder`. Using it is recommended (see the included README.md file for instructions). The following steps are for doing a manual build instead. 
+
 Prerequisites: 
 
 * Target version tag (1.1.7 in this example) needs to match contents of .spec file.
